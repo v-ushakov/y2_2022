@@ -18,7 +18,7 @@ grid = QGridLayout()
 #display logo
 
 
-image = QPixmap("logo.png")
+image = QPixmap("../videotutorial/logo.png")
 logo = QLabel()
 logo.setPixmap(image)
 #placing logo in the center:
