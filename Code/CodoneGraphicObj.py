@@ -96,13 +96,13 @@ class Window(QWidget):
             QPoint(85, 52),#4
             QPoint(80, 60)#8
         ])
-        p = scene.addPolygon(pointsG)
+        #p = scene.addPolygon(pointsG)
 
-        transform = QtGui.QTransform()
-        transform.translate(20, 100)
-        transform.rotate(-90)
+        #transform = QtGui.QTransform()
+        #transform.translate(20, 100)
+        #transform.rotate(-90)
 
-        p.setTransform(transform)
+        #p.setTransform(transform)
 
         if self.c == "T":
             painter.drawText(93, 90, "T")
@@ -123,7 +123,7 @@ class Window(QWidget):
 
 # look for animation in pyQt
 App = QApplication(sys.argv)
-typ = ["G"]
+typ = ["T"]
 window = Window()
 window.show()
 time.sleep(2)
