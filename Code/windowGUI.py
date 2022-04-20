@@ -1,7 +1,7 @@
 import sys
 import math
 import time
-from PyQt5.QtWidgets import  QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QGraphicsScene,  QMainWindow
+from PyQt5.QtWidgets import QScrollArea, QHBoxLayout,  QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QGraphicsScene,  QMainWindow
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor, QIcon, QPainter, QPen, QBrush, QPolygon, QColor, QTransform
@@ -12,9 +12,13 @@ class Window(QMainWindow):
         super(). __init__()
         self.c = "C"
         self.scene = QGraphicsScene()
-        self.scene.setSceneRect(700,700,700,700)
+        #self.setCentralWidget(QWidget())
+        #self.horizontal = QHBoxLayout()  # Horizontal main layout
+       # self.centralWidget().setLayout(self.horizontal)
+        self.scene.setSceneRect(300,200,1500,500)
 
-        self.setGeometry(200,200,500,300)
+        self.setGeometry(300,200,1500,500)
+
 
     def set_letter(self, co):
         if isinstance(co,str):

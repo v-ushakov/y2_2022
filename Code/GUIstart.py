@@ -9,7 +9,8 @@ app = QApplication(sys.argv)
 window = QWidget()
 window.setWindowTitle("Protein synthesis")
 window.setFixedWidth(1500)
-#window.move(100, 100)
+window.setFixedHeight()
+window.move(100, 100)
 window.setStyleSheet("background : #beb1c7;")##beb1c7#ab9bb7
 
 grid = QGridLayout()
