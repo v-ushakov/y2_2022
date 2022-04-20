@@ -1,16 +1,18 @@
 import sys
 import math
 import time
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout
+from PyQt5.QtWidgets import  QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QGraphicsScene,  QMainWindow
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor, QIcon, QPainter, QPen, QBrush, QPolygon, QColor, QTransform
 from PyQt5.QtCore import Qt, QPoint
 
-class Window(QWidget):
+class Window(QMainWindow):
     def __init__(self):
         super(). __init__()
         self.c = "C"
+        self.scene = QGraphicsScene()
+        self.scene.setSceneRect(700,700,700,700)
 
         self.setGeometry(200,200,500,300)
 
@@ -122,22 +124,6 @@ class Window(QWidget):
 
 
 # look for animation in pyQt
-App = QApplication(sys.argv)
-typ = ["T"]
-window = Window()
-window.show()
-time.sleep(2)
-for t in typ:
-    window.set_letter(t)
-    window.show()
-    #time.sleep(2)
-window.show()
-#window.set_letter("A")
-#window.show()
-#time.sleep(2)
-#window.set_letter("T")
-#window.show()
-sys.exit(App.exec())
 
 
 
