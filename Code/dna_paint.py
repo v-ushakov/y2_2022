@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QScrollArea
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor
-from PyQt5.QtCore import Qt, QPoint, QTimer
+from PyQt5.QtCore import Qt, QPoint
+import math
 
 nucleotides = { }
 
@@ -9,13 +10,14 @@ class Nucleotide:
         self.key = c
         self.brush = QBrush(QColor(r, g, b, 100), Qt.SolidPattern)
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
+        self.shape.translate(-80, 0)
         nucleotides[c] = self
 
     def draw(self, painter):
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
         painter.setBrush(self.brush)
-        painter.drawText(93, 90, self.key)
         painter.drawPolygon(self.shape)
+        painter.drawText(13, 90, self.key)
 
 Nucleotide('A', 100,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
                               (97.5, 45), (80, 60)])
@@ -35,27 +37,32 @@ class DNA_view(QWidget):
     def __init__(self, dna):
         super().__init__()
         #self.setStyleSheet("background : #cbd4fb;")
-        self.shift = 0
         self.dna = dna
+        self.resize(36*len(self.dna), 100)
 
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.shift_data)
-        self.timer.start(10)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.translate(self.shift, 0)
-        for x in self.dna:
-            painter.translate(36, 0)
-            nucleotides[x].draw(painter)
 
-    def shift_data(self):
-        if self.shift > self.width():
-            self.shift = 0
-        else:
-            self.shift += 1
-        self.repaint()
+    def paintEvent(self, ev):
+        try:
+            painter = QPainter(self)
+            a = (ev.rect().x())//36
+
+            b = (ev.rect().x() + ev.rect().width()+35)//36
+            painter.translate(36*a, 0)
+
+            for x in self.dna[a:b+1]: #   range(a, b+1):
+                #try:
+                nucleotides[x].draw(painter)
+                #except IndexError:
+                #    break
+                painter.translate(36, 0)
+            print(ev.rect())
+            print(ev.rect().x())
+            print(ev.rect().width())
+            #print(1622//36)
+        except Exception as e:
+            print(e)
 
 
 if __name__ == "__main__":
@@ -64,6 +71,11 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    win = DNA_view("ACGTTGCA"*20)
+    dna = DNA_view("ACGTTGCA"*20)
+
+    win = QScrollArea()
+    win.setWidget(dna)
+    win.resize(1000, 500)
+
     win.show()
     app.exec()

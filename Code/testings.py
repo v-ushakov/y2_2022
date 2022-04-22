@@ -1,5 +1,6 @@
 import unittest
 from biosynth import reading_letters
+from dna_paint import
 from io import StringIO
 
 class TestLetters(unittest.TestCase):
