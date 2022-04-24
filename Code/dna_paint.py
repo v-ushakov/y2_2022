@@ -5,6 +5,8 @@ import math
 
 nucleotides = { }
 
+
+
 class Nucleotide:
     def __init__(self, c, r, g, b, points):
         nucleotides[c] = self
@@ -15,22 +17,37 @@ class Nucleotide:
         trans = QTransform()
         trans = trans.rotate(180)
         self.rshape = trans.map(self.shape)
-        self.shape.translate(0, 150)
+        self.shape.translate(0, 110)
         self.rshape.translate(35, 110)
+
+
+
 
 
     def draw(self, painter, gr, shape):
         color = self.color
         #if gr != 0 :
-            #color.setHSV(a = 50)
+        #color.setHSV(a = 50)
         #
         # else:
         #     color = self.color
 
+
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
         painter.setBrush(QBrush(color, Qt.SolidPattern))
         painter.drawPolygon(shape)
-        painter.drawText(13, 240, self.key)
+        if shape == self.shape:
+            painter.drawText(shape.boundingRect().center() + QPoint(-3, 10), self.key)
+        elif shape == self.rshape:
+            key = 'U' if self.key == 'T' else self.key
+            painter.drawText(shape.boundingRect().center() + QPoint(-3, -2), key)
+        # if shape == self.shape:
+        #     painter.drawText(13, 185, self.key)
+        # elif shape == self.rshape:
+        #     x = self.rshape
+        #     y = 100
+        #     painter.drawText(x, y, self.key)
+
 
 Nucleotide('A', 100,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
                               (97.5, 45), (80, 60)])
@@ -54,6 +71,7 @@ class DNA_view(QWidget):
         self.resize(36*len(self.dna), 300)
 
     def paintEvent(self, ev):
+        dn = {'T': 'A','C': 'G','G': 'C','A' : 'T'}
         try:
             painter = QPainter(self)
             a = (ev.rect().x())//36
@@ -63,11 +81,12 @@ class DNA_view(QWidget):
 
             painter.save()
             for x in self.dna[a:b+1]:
+                n = dn[x]
                 nucleotides[x].draw(painter, 0, nucleotides[x].shape)
+                nucleotides[n].draw(painter, 0 , nucleotides[n].rshape)
                 painter.translate(36, 0)
             painter.restore()
             for x in self.dna[a:b+1]:
-                nucleotides[x].draw(painter, 0 , nucleotides[x].rshape)
                 painter.translate(36, 0)
             print(ev.rect())
             print(ev.rect().x())

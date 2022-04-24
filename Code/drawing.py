@@ -14,6 +14,10 @@ class View(QWidget):
         painter.drawLine(0, -dy, 0, dy)
         try:
             nucleotides['A'].draw(painter, 0, nucleotides['A'].shape)
+            #painter.translate(36, 0)
+            nucleotides['A'].draw(painter, 0, nucleotides['A'].rshape)
+
+            print(nucleotides['A'].rshape)
         except Exception as e:
             print(e)
 
@@ -25,6 +29,7 @@ def main():
 
     app = QApplication(argv)
     dna = View()
+
 
     dna.show()
     app.exec()
