@@ -11,14 +11,11 @@ class Nucleotide:
         self.key = c
         self.color = QColor(r, g, b, 50)
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
-        self.shape.translate(-80, -60)
         trans = QTransform()
         trans = trans.rotate(180)
         self.rshape = trans.map(self.shape)
-        self.rshape.translate(36, 0)
+        self.shape.translate(-80, 150)
 
-        self.shape.translate(0, 210)
-        self.rshape.translate(0, 180)
 
     def draw(self, painter, gr, shape):
         color = self.color
@@ -53,13 +50,6 @@ class DNA_view(QWidget):
         #self.setStyleSheet("background : #cbd4fb;")
         self.dna = dna
         self.resize(36*len(self.dna), 300)
-
-
-
-
-
-
-
 
     def paintEvent(self, ev):
         try:
