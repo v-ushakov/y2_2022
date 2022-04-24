@@ -95,6 +95,9 @@ class DNA_view(QWidget):
         except Exception as e:
             print(e)
 
+    def keyReleaseEvent(self, ev):
+        print(ev.key())
+
 
 if __name__ == "__main__":
     from sys import argv
@@ -109,4 +112,5 @@ if __name__ == "__main__":
     win.resize(1000, 500)
 
     win.show()
+    dna.setFocus()
     app.exec()
