@@ -11,10 +11,12 @@ class Nucleotide:
         self.key = c
         self.color = QColor(r, g, b, 50)
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
+        self.shape.translate(-80, -60)
         trans = QTransform()
         trans = trans.rotate(180)
         self.rshape = trans.map(self.shape)
-        self.shape.translate(-80, 150)
+        self.shape.translate(0, 150)
+        self.rshape.translate(35, 110)
 
 
     def draw(self, painter, gr, shape):
