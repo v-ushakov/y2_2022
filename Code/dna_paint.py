@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QScrollArea
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor
+from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform
 from PyQt5.QtCore import Qt, QPoint
 import math
 
@@ -7,17 +7,31 @@ nucleotides = { }
 
 class Nucleotide:
     def __init__(self, c, r, g, b, points):
-        self.key = c
-        self.brush = QBrush(QColor(r, g, b, 100), Qt.SolidPattern)
-        self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
-        self.shape.translate(-80, 0)
         nucleotides[c] = self
+        self.key = c
+        self.color = QColor(r, g, b, 50)
+        self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
+        self.shape.translate(-80, -60)
+        trans = QTransform()
+        trans = trans.rotate(180)
+        self.rshape = trans.map(self.shape)
+        self.rshape.translate(36, 0)
 
-    def draw(self, painter):
+        self.shape.translate(0, 210)
+        self.rshape.translate(0, 180)
+
+    def draw(self, painter, gr, shape):
+        color = self.color
+        #if gr != 0 :
+            #color.setHSV(a = 50)
+        #
+        # else:
+        #     color = self.color
+
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
-        painter.setBrush(self.brush)
-        painter.drawPolygon(self.shape)
-        painter.drawText(13, 90, self.key)
+        painter.setBrush(QBrush(color, Qt.SolidPattern))
+        painter.drawPolygon(shape)
+        painter.drawText(13, 240, self.key)
 
 Nucleotide('A', 100,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
                               (97.5, 45), (80, 60)])
@@ -38,7 +52,11 @@ class DNA_view(QWidget):
         super().__init__()
         #self.setStyleSheet("background : #cbd4fb;")
         self.dna = dna
-        self.resize(36*len(self.dna), 100)
+        self.resize(36*len(self.dna), 300)
+
+
+
+
 
 
 
@@ -49,13 +67,15 @@ class DNA_view(QWidget):
             a = (ev.rect().x())//36
 
             b = (ev.rect().x() + ev.rect().width()+35)//36
-            painter.translate(36*a, 0)
+            painter.translate(36*a, 10)
 
-            for x in self.dna[a:b+1]: #   range(a, b+1):
-                #try:
-                nucleotides[x].draw(painter)
-                #except IndexError:
-                #    break
+            painter.save()
+            for x in self.dna[a:b+1]:
+                nucleotides[x].draw(painter, 0, nucleotides[x].shape)
+                painter.translate(36, 0)
+            painter.restore()
+            for x in self.dna[a:b+1]:
+                nucleotides[x].draw(painter, 0 , nucleotides[x].rshape)
                 painter.translate(36, 0)
             print(ev.rect())
             print(ev.rect().x())
@@ -71,7 +91,7 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view("ACGTTGCA"*20)
+    dna = DNA_view("ACGTTGCAT"*20)
 
     win = QScrollArea()
     win.setWidget(dna)
