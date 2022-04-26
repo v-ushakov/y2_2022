@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QScrollArea
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QTimer
+
+
 import math
 
 nucleotides = { }
@@ -11,7 +13,7 @@ class Nucleotide:
     def __init__(self, c, r, g, b, points):
         nucleotides[c] = self
         self.key = c
-        self.color = QColor(r, g, b, 50)
+        self.color = QColor(r, g, b, 100)
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
         self.shape.translate(-80, -60)
         trans = QTransform()
@@ -62,6 +64,8 @@ Nucleotide('C', 200,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
                               (95.5, 47), (97.5, 47), (92, 48), (85, 52),
                               (80, 60)])
 
+OUT = 70
+
 class DNA_view(QWidget):
 
     def __init__(self, dna):
@@ -69,6 +73,22 @@ class DNA_view(QWidget):
         #self.setStyleSheet("background : #cbd4fb;")
         self.dna = dna
         self.resize(36*len(self.dna), 300)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.timerShot)
+
+        self.counter = 0
+
+    def timerShot(self):
+        self.counter += 1
+        self.repaint()
+        if self.counter == OUT:
+            self.timer.stop()
+            print("timer has been stopped")
+
+
+
+
 
     def paintEvent(self, ev):
         dn = {'T': 'A','C': 'G','G': 'C','A' : 'T'}
@@ -79,24 +99,32 @@ class DNA_view(QWidget):
             b = (ev.rect().x() + ev.rect().width()+35)//36
             painter.translate(36*a, 10)
 
-            painter.save()
             for x in self.dna[a:b+1]:
                 n = dn[x]
                 nucleotides[x].draw(painter, 0, nucleotides[x].shape)
+                painter.save()
+                painter.translate(0, (self.counter - OUT)*2)
                 nucleotides[n].draw(painter, 0 , nucleotides[n].rshape)
+                painter.restore()
                 painter.translate(36, 0)
-            painter.restore()
-            for x in self.dna[a:b+1]:
-                painter.translate(36, 0)
-            print(ev.rect())
-            print(ev.rect().x())
-            print(ev.rect().width())
-            #print(1622//36)
+
+
         except Exception as e:
             print(e)
 
     def keyReleaseEvent(self, ev):
-        print(ev.key())
+        if ev.key() == 32:
+            self.counter = 0
+            self.timer.start(50)
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
