@@ -34,7 +34,8 @@ def main():
     print(rna)
     print("len of rna:", len(rna))
 
-main()
+if __name__ == "__main__":
+    main()
 
 
 

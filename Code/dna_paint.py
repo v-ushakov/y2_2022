@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSli
                             QVBoxLayout, QPushButton
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
 from PyQt5.QtCore import Qt, QPoint, QTimer
-
+from biosynth import reading_letters as rl
 
 import math
 
@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view("ACGTTGCAT"*20)
+    dna = DNA_view(rl("dna_sequence"))#("ACGTTGCAT"*20)
 
     win = QScrollArea()
     win.setWidget(dna)
