@@ -80,15 +80,24 @@ class DNA_view(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.timerShot)
 
+        self.timer2 = QTimer()
+        self.timer2.timeout.connect(self.timerShot2)
+
         self.color_timer = QTimer()
         self.color_timer.timeout.connect(self.timerColor)
 
         self.color_count = 0
         self.counter = 0
+        self.counterDNA = 0
         self.stage = 1
 
     def setCounter(self, val):
         self.counter = val
+        self.repaint()
+
+
+    def setCounterDNA(self, val):
+        self.counterDNA = val
         self.repaint()
 
     def setGray(self, val):
@@ -102,14 +111,21 @@ class DNA_view(QWidget):
             print("timer has been stopped")
             self.color_timer.start(5)
 
+    def timerShot2(self):
+        self.setCounterDNA(self.counterDNA + 1)
+        if self.counterDNA >= OUT+50:
+            self.timer2.stop()
+            print("timer has been stopped")
+            self.counterDNA = 0
+
+
     def timerColor(self):
         self.setGray(self.color_count + 1)
         self.repaint()
         if self.color_count >= 100:
             self.color_timer.stop()
             print("color timer has been stopped")
-            self.stage = 2
-
+            self.timer2.start(50)
     def paintEvent(self, ev):
         dn = {'T': 'A','C': 'G','G': 'C','A' : 'T'}
         try:
@@ -121,9 +137,11 @@ class DNA_view(QWidget):
 
             for x in self.dna[a:b+1]:
                 n = dn[x]
-                nucleotides[x].draw(painter, self.color_count, nucleotides[x].shape)
                 painter.save()
-
+                painter.translate(0, (self.counterDNA) * 2)
+                nucleotides[x].draw(painter, self.color_count, nucleotides[x].shape)
+                painter.restore()
+                painter.save()
                 painter.translate(0, (self.counter - OUT)*2)
                 nucleotides[n].draw(painter, 0, nucleotides[n].rshape)
 
@@ -162,9 +180,13 @@ if __name__ == "__main__":
 
     slider1 = QSlider(Qt.Horizontal)
     slider1.valueChanged.connect(dna.setCounter)
+    slider1.setRange(0, 70)
     slider2 = QSlider(Qt.Horizontal)
     slider2.setRange(0, 100)
     slider2.valueChanged.connect(dna.setGray)
+    slider3 = QSlider(Qt.Horizontal)
+    slider3.setRange(0, 100)
+    slider3.valueChanged.connect(dna.setCounterDNA)
 
 
     button1 = QPushButton("Start transcription")
@@ -181,6 +203,7 @@ if __name__ == "__main__":
     layout = QVBoxLayout()
     layout.addWidget(slider1)
     layout.addWidget(slider2)
+    layout.addWidget(slider3)
     layout.addWidget(button1)
 
     panel = QWidget()
