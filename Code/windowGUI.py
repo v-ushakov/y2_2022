@@ -25,15 +25,6 @@ class Window(QMainWindow):
             self.c = co
 
 
-    def rotatePolygon(self, polygon, theta):
-        """Rotates the given polygon which consists of corners represented as (x,y),
-        around the ORIGIN, clock-wise, theta degrees"""
-        theta = math.radians(theta)
-        rotatedPolygon = []
-        for corner in polygon:
-            rotatedPolygon.append((corner[0] * math.cos(theta) - corner[1] * math.sin(theta),
-                                   corner[0] * math.sin(theta) + corner[1] * math.cos(theta)))
-        return rotatedPolygon
 
     def paintEvent(self, event):
         painter = QPainter(self)

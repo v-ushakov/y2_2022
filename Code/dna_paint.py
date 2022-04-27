@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QScrollArea
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform
+from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray
 from PyQt5.QtCore import Qt, QPoint, QTimer
 
 
@@ -13,6 +13,9 @@ class Nucleotide:
     def __init__(self, c, r, g, b, points):
         nucleotides[c] = self
         self.key = c
+        self.gray_color_fac = qGray(r, g, b)
+        self.gray = QColor(self.gray_color_fac, self.gray_color_fac, self.gray_color_fac, 85)
+        self.hgray = QColor(r, g, b, 50)
         self.color = QColor(r, g, b, 100)
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
         self.shape.translate(-80, -60)
@@ -22,17 +25,29 @@ class Nucleotide:
         self.shape.translate(0, 110)
         self.rshape.translate(35, 110)
 
+    def get_gray_color_fac(self):
+        return self.gray_color_fac
+
+    def change_color(self,a, b, c):
+        self.color = QColor(a, b, c, 100)
 
 
 
 
-    def draw(self, painter, gr, shape):
-        color = self.color
-        #if gr != 0 :
-        #color.setHSV(a = 50)
-        #
-        # else:
-        #     color = self.color
+
+
+
+    def draw(self, painter, gr, shape, c):
+        if c == 0:
+            color = self.color
+        if c == 4:
+            color = self.gray
+        if c == 1:
+            color = self.color.lighter(150)
+        if c == 2:
+            color = self.color.lighter(170)
+        if c == 3:
+            color = self.color.lighter(180)
 
 
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
@@ -77,6 +92,10 @@ class DNA_view(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.timerShot)
 
+        self.color_timer = QTimer()
+        self.color_timer.timeout.connect(self.timerColor)
+
+        self.color_count = 0
         self.counter = 0
 
     def timerShot(self):
@@ -85,6 +104,15 @@ class DNA_view(QWidget):
         if self.counter == OUT:
             self.timer.stop()
             print("timer has been stopped")
+
+    def timerColor(self):
+        self.color_count += 1
+        self.repaint()
+        if self.color_count == 4:
+            self.color_timer.stop()
+            print("color timer has been stopped")
+
+
 
 
 
@@ -101,10 +129,13 @@ class DNA_view(QWidget):
 
             for x in self.dna[a:b+1]:
                 n = dn[x]
-                nucleotides[x].draw(painter, 0, nucleotides[x].shape)
+                gr = 0
+                if self.color_count != 0:
+                    gr = self.color_count
+                nucleotides[x].draw(painter, 0, nucleotides[x].shape, gr)
                 painter.save()
                 painter.translate(0, (self.counter - OUT)*2)
-                nucleotides[n].draw(painter, 0 , nucleotides[n].rshape)
+                nucleotides[n].draw(painter, 0 , nucleotides[n].rshape, 0)
                 painter.restore()
                 painter.translate(36, 0)
 
@@ -113,9 +144,13 @@ class DNA_view(QWidget):
             print(e)
 
     def keyReleaseEvent(self, ev):
+        print(ev.key())
         if ev.key() == 32:
             self.counter = 0
             self.timer.start(50)
+        if ev.key() == 67:
+            self.color_count = 0
+            self.color_timer.start(50)
 
 
 
