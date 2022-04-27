@@ -11,13 +11,20 @@ nucleotides = { }
 
 
 class Nucleotide:
-    def __init__(self, c, r, g, b, points):
-        nucleotides[c] = self
-        self.key = c
-        self.gray_color_fac = qGray(r, g, b)
-        self.gray = QColor(self.gray_color_fac, self.gray_color_fac, self.gray_color_fac, 85)
-        self.hgray = QColor(r, g, b, 50)
-        self.color = QColor(r, g, b, 100)
+    def __init__(self, key, r, g, b, points):
+        nucleotides[key] = self
+        self.key = key
+
+        self.r = r
+        self.g = g
+        self.b = b
+        self.gray = qGray(r, g, b)
+
+        #self.gray_color_fac = qGray(r, g, b)
+        #self.gray = QColor(self.gray_color_fac, self.gray_color_fac, self.gray_color_fac, 85)
+        #self.hgray = QColor(r, g, b, 50)
+        #self.color = QColor(r, g, b, 100)
+
         self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
         self.shape.translate(-80, -60)
         trans = QTransform()
@@ -26,31 +33,10 @@ class Nucleotide:
         self.shape.translate(0, 110)
         self.rshape.translate(35, 110)
 
-
-    def get_gray_color_fac(self):
-        return self.gray_color_fac
-
-    def change_color(self,a, b, c):
-        self.color = QColor(a, b, c, 100)
-
-
-
-
-
-
-
-    def draw(self, painter, gr, shape, c):
-        if c == 0:
-            color = self.color
-        elif c == 1:
-            color = self.color.lighter(150)
-        elif c == 2:
-            color = self.color.lighter(170)
-        elif c == 3:
-            color = self.color.lighter(180)
-        else:
-            color = self.gray
-
+    def draw(self, painter, gr, shape):
+        color = QColor(((100-gr)*self.r + gr*self.gray)//100,
+                       ((100-gr)*self.g + gr*self.gray)//100,
+                       ((100-gr)*self.b + gr*self.gray)//100, 100)
 
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
         painter.setBrush(QBrush(color, Qt.SolidPattern))
@@ -101,31 +87,28 @@ class DNA_view(QWidget):
         self.counter = 0
         self.stage = 1
 
-    def timerShot(self):
-        self.counter += 1
+    def setCounter(self, val):
+        self.counter = val
         self.repaint()
-        if self.counter == OUT:
+
+    def setGray(self, val):
+        self.color_count = val
+        self.repaint()
+
+    def timerShot(self):
+        self.setCounter(self.counter + 1)
+        if self.counter >= OUT:
             self.timer.stop()
             print("timer has been stopped")
-            self.color_timer.start(50)
+            self.color_timer.start(5)
 
     def timerColor(self):
-        self.color_count += 1
+        self.setGray(self.color_count + 1)
         self.repaint()
-        if self.color_count == 4:
+        if self.color_count >= 100:
             self.color_timer.stop()
             print("color timer has been stopped")
             self.stage = 2
-            self.counter = 0
-            #self.timer.start(50)
-
-
-
-
-
-
-
-
 
     def paintEvent(self, ev):
         dn = {'T': 'A','C': 'G','G': 'C','A' : 'T'}
@@ -138,12 +121,11 @@ class DNA_view(QWidget):
 
             for x in self.dna[a:b+1]:
                 n = dn[x]
-                gr = self.color_count
-                nucleotides[x].draw(painter, 0, nucleotides[x].shape, gr)
+                nucleotides[x].draw(painter, self.color_count, nucleotides[x].shape)
                 painter.save()
 
                 painter.translate(0, (self.counter - OUT)*2)
-                nucleotides[n].draw(painter, 0 , nucleotides[n].rshape, 0)
+                nucleotides[n].draw(painter, 0, nucleotides[n].rshape)
 
                 painter.restore()
                 painter.translate(36, 0)
@@ -165,16 +147,6 @@ class DNA_view(QWidget):
             self.color_count = 0
             self.color_timer.start(50)
 
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     from sys import argv
     from PyQt5.QtWidgets import QApplication
@@ -189,7 +161,12 @@ if __name__ == "__main__":
 
 
     slider1 = QSlider(Qt.Horizontal)
-    #slider2 = QSlider(Qt.Horizontal)
+    slider1.valueChanged.connect(dna.setCounter)
+    slider2 = QSlider(Qt.Horizontal)
+    slider2.setRange(0, 100)
+    slider2.valueChanged.connect(dna.setGray)
+
+
     button1 = QPushButton("Start transcription")
     button1.setCursor(QCursor(Qt.PointingHandCursor))
     button1.setStyleSheet("*{border: 2px solid '#c9bd6b';" +
@@ -197,15 +174,14 @@ if __name__ == "__main__":
                          "font-size : 25px;" +
                          "color : 'black';" +
                          "padding: 25px 0;" +
-                         "margin: 50px 100px;}" +
+                         "margin: 5px 10px;}" +
                          "*:hover{background: '#c9bd6b';}")
     button1.clicked.connect(dna.start_trans)
-    #self.color_timer.timeout.connect(self.timerColor)
 
     layout = QVBoxLayout()
     layout.addWidget(slider1)
+    layout.addWidget(slider2)
     layout.addWidget(button1)
-    #layout.addWidget(slider2)
 
     panel = QWidget()
     panel.setLayout(layout)
