@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QScrollArea
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray
+from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSlider, QSplitter, \
+                            QVBoxLayout, QPushButton
+from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
 from PyQt5.QtCore import Qt, QPoint, QTimer
 
 
@@ -25,6 +26,7 @@ class Nucleotide:
         self.shape.translate(0, 110)
         self.rshape.translate(35, 110)
 
+
     def get_gray_color_fac(self):
         return self.gray_color_fac
 
@@ -40,14 +42,14 @@ class Nucleotide:
     def draw(self, painter, gr, shape, c):
         if c == 0:
             color = self.color
-        if c == 4:
-            color = self.gray
-        if c == 1:
+        elif c == 1:
             color = self.color.lighter(150)
-        if c == 2:
+        elif c == 2:
             color = self.color.lighter(170)
-        if c == 3:
+        elif c == 3:
             color = self.color.lighter(180)
+        else:
+            color = self.gray
 
 
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
@@ -97,6 +99,7 @@ class DNA_view(QWidget):
 
         self.color_count = 0
         self.counter = 0
+        self.stage = 1
 
     def timerShot(self):
         self.counter += 1
@@ -104,6 +107,7 @@ class DNA_view(QWidget):
         if self.counter == OUT:
             self.timer.stop()
             print("timer has been stopped")
+            self.color_timer.start(50)
 
     def timerColor(self):
         self.color_count += 1
@@ -111,6 +115,11 @@ class DNA_view(QWidget):
         if self.color_count == 4:
             self.color_timer.stop()
             print("color timer has been stopped")
+            self.stage = 2
+            self.counter = 0
+            #self.timer.start(50)
+
+
 
 
 
@@ -129,13 +138,13 @@ class DNA_view(QWidget):
 
             for x in self.dna[a:b+1]:
                 n = dn[x]
-                gr = 0
-                if self.color_count != 0:
-                    gr = self.color_count
+                gr = self.color_count
                 nucleotides[x].draw(painter, 0, nucleotides[x].shape, gr)
                 painter.save()
+
                 painter.translate(0, (self.counter - OUT)*2)
                 nucleotides[n].draw(painter, 0 , nucleotides[n].rshape, 0)
+
                 painter.restore()
                 painter.translate(36, 0)
 
@@ -143,12 +152,16 @@ class DNA_view(QWidget):
         except Exception as e:
             print(e)
 
+    def start_trans(self):
+        self.counter = 0
+        self.color_count = 0
+        self.timer.start(50)
+
     def keyReleaseEvent(self, ev):
         print(ev.key())
         if ev.key() == 32:
-            self.counter = 0
-            self.timer.start(50)
-        if ev.key() == 67:
+            self.start_trans()
+        elif ev.key() == 67:
             self.color_count = 0
             self.color_timer.start(50)
 
@@ -173,6 +186,39 @@ if __name__ == "__main__":
     win = QScrollArea()
     win.setWidget(dna)
     win.resize(1000, 500)
+
+
+    slider1 = QSlider(Qt.Horizontal)
+    #slider2 = QSlider(Qt.Horizontal)
+    button1 = QPushButton("Start transcription")
+    button1.setCursor(QCursor(Qt.PointingHandCursor))
+    button1.setStyleSheet("*{border: 2px solid '#c9bd6b';" +
+                         "border-radius : 25px;" +
+                         "font-size : 25px;" +
+                         "color : 'black';" +
+                         "padding: 25px 0;" +
+                         "margin: 50px 100px;}" +
+                         "*:hover{background: '#c9bd6b';}")
+    button1.clicked.connect(dna.start_trans)
+    #self.color_timer.timeout.connect(self.timerColor)
+
+    layout = QVBoxLayout()
+    layout.addWidget(slider1)
+    layout.addWidget(button1)
+    #layout.addWidget(slider2)
+
+    panel = QWidget()
+    panel.setLayout(layout)
+    #---------------------------------------------------------------------------
+
+    spl = QSplitter(Qt.Vertical)
+    spl.addWidget(win)
+    spl.addWidget(panel)
+
+    wid = QMainWindow()
+    wid.setCentralWidget(spl)
+    wid.resize(1000, 500)
+    wid.show()
 
     win.show()
     dna.setFocus()
