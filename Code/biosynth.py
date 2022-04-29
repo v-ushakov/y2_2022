@@ -76,6 +76,9 @@ def main():
             print(dna[(i[1]): (i[2])])
 
         print(rna)
+    else:
+        print("Error in reading file")
+
 
 
 
