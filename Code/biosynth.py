@@ -16,7 +16,7 @@ def reading_letters(fil):
 
 def gene(dna):
     #stops = ["ATT", "ATC", "ACT"]
-    m = re.search(("(...)*ATT|(...)*ATC|(...)*ACT"),dna)
+    m = re.search(("(...)*?ATT|(...)*?ATC|(...)*?ACT"),dna)
     #print("m is in ",m.span()[1])
     return m.span()[1]
 
@@ -52,7 +52,7 @@ def main():
     print("the gene starts here ",a, ",", c) # a is the TATA place, C is the start codone place
 
     e = gene(dna[c:]) + len (dna[:c])
-    #print(dna)
+
     print(dna[c:e])
 
 
