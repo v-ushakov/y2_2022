@@ -152,18 +152,17 @@ class DNA_view(QWidget):
                 painter.translate(36, 0)
 
             painter.restore()
-            for gene in self.genes:
+            for tata, tac, stop in self.genes:
                 painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.SolidLine))
-                painter.drawLine(gene[0]*36,170, (gene[0]+4)*36, 170)
+                painter.drawLine(tata*36,170, (tata+4)*36, 170)
 
                 painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.DotLine))
-                painter.drawLine((gene[0]+4)*36, 170, (gene[1])*36, 170)
+                painter.drawLine((tata+4)*36, 170, (tac)*36, 170)
 
                 painter.setPen(QPen(QColor(0, 140, 0), 5, Qt.SolidLine))
-                painter.drawLine((gene[1])*36,170, (gene[2]+3)*36, 170)
-                painter.drawLine((gene[1])*36,160, (gene[1])*36, 170)
-                painter.drawLine((gene[2]+3)*36, 160, (gene[2]+3)*36, 170)
-
+                painter.drawLine((tac)*36,170, (stop+3)*36, 170)
+                painter.drawLine((tac)*36,160, (tac)*36, 170)
+                painter.drawLine((stop+3)*36, 160, (stop+3)*36, 170)
 
         except Exception as e:
             print(e)

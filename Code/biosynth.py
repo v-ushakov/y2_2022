@@ -65,8 +65,8 @@ def main():
 
 def test_genes():
     tata = []
-    for x in find_genes('TATATACAAAATT'*10):
-        tata.append(x[0])
+    for a, b, c in find_genes('TATATACAAAATT'*10):
+        tata.append(a)
     print("tata is", tata)
     print(find_genes('TATATACAAAAATT'))
     print(find_genes('TATATACAAAATT'*10))
