@@ -17,10 +17,10 @@ def reading_letters(fil):
 
 def find_gene(dna):
     # stops: ATT, ATC, ACT
-    m = re.match(("(...)*?A(TT|TC|CT)"),dna)
+    m = re.match(("(...)*?A(TT|TC|CT)"), dna)
     if m == None:
         return -1
-    #print("m is in ",m.span()[1])
+    #print("m is in", m.span()[1])
     return m.span()[1]
 
 def find_genes(dna):
@@ -29,11 +29,11 @@ def find_genes(dna):
     while True:
         a = dna.find("TATA", s)
         if a < 0:
-            return genes
+            break
         b = dna.find("TATA", a + 3)
         c = dna.find("TAC", a + 3)
         if c < 0:
-            return genes
+            break
         #print('c1', a, b, c)
         while c >= b and b != -1:
             a = b
@@ -43,9 +43,10 @@ def find_genes(dna):
         e = find_gene(dna[c:]) + len (dna[:c])
         if e == len (dna[:c]) - 1:
             #print("There is no gene found")
-            return genes
+            break
         genes.append((a, c, e))
-        s = e + 3
+        s = e
+    return genes
 
 def main():
     rna = ""
