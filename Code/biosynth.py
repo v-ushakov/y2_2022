@@ -64,6 +64,10 @@ def main():
         print("Error in reading file")
 
 def test_genes():
+    tata = []
+    for x in find_genes('TATATACAAAATT'*10):
+        tata.append(x[0])
+    print("tata is", tata)
     print(find_genes('TATATACAAAAATT'))
     print(find_genes('TATATACAAAATT'*10))
 

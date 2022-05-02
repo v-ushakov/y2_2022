@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSli
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
 from PyQt5.QtCore import Qt, QPoint, QTimer
 from biosynth import reading_letters as rl
+from biosynth import find_genes
 
 import math
 
@@ -91,6 +92,9 @@ class DNA_view(QWidget):
         self.counterDNA = 0
         self.stage = 1
 
+        self.genes = find_genes(dna)
+
+
     def setCounter(self, val):
         self.counter = val
         self.repaint()
@@ -130,8 +134,8 @@ class DNA_view(QWidget):
         dn = {'T': 'A','C': 'G','G': 'C','A' : 'T'}
         try:
             painter = QPainter(self)
+            painter.save()
             a = (ev.rect().x())//36
-
             b = (ev.rect().x() + ev.rect().width()+35)//36
             painter.translate(36*a, 10)
 
@@ -144,9 +148,21 @@ class DNA_view(QWidget):
                 painter.save()
                 painter.translate(0, (self.counter - OUT)*2)
                 nucleotides[n].draw(painter, 0, nucleotides[n].rshape)
-
                 painter.restore()
                 painter.translate(36, 0)
+
+            painter.restore()
+            for gene in self.genes:
+                painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.SolidLine))
+                painter.drawLine(gene[0]*36,170, (gene[0]+4)*36, 170)
+
+                painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.DotLine))
+                painter.drawLine((gene[0]+4)*36, 170, (gene[1])*36, 170)
+
+                painter.setPen(QPen(QColor(0, 140, 0), 5, Qt.SolidLine))
+                painter.drawLine((gene[1])*36,170, (gene[2]+3)*36, 170)
+                painter.drawLine((gene[1])*36,160, (gene[1])*36, 170)
+                painter.drawLine((gene[2]+3)*36, 160, (gene[2]+3)*36, 170)
 
 
         except Exception as e:
