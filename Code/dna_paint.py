@@ -160,9 +160,9 @@ class DNA_view(QWidget):
                 painter.drawLine((tata+4)*36, 170, (tac)*36, 170)
 
                 painter.setPen(QPen(QColor(0, 140, 0), 5, Qt.SolidLine))
-                painter.drawLine((tac)*36,170, (stop+3)*36, 170)
-                painter.drawLine((tac)*36,160, (tac)*36, 170)
-                painter.drawLine((stop+3)*36, 160, (stop+3)*36, 170)
+                painter.drawLine((tac)*36, 170, stop*36, 170)
+                painter.drawLine((tac)*36, 160, tac *36, 170)
+                painter.drawLine(stop *36, 160, stop*36, 170)
 
         except Exception as e:
             print(e)
@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view(rl("dna_sequence"))#("ACGTTGCAT"*20)
+    dna = DNA_view('AACCCCAATATACCTACAAAATT'*1000)        #    rl("dna_sequence")
 
     win = QScrollArea()
     win.setWidget(dna)
