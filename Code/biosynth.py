@@ -16,17 +16,16 @@ def reading_letters(fil):
     return dna
 
 def find_gene(dna):
-    #stops = ["ATT", "ATC", "ACT"]
-    m = re.match(("(...)*?ATT|(...)*?ATC|(...)*?ACT"),dna) #"(...)*?ATT|(...)*?ATC|(...)*?ACT")
+    # stops: ATT, ATC, ACT
+    m = re.match(("(...)*?A(TT|TC|CT)"),dna)
     if m == None:
         return -1
-    print("m is in ",m.span()[1])
+    #print("m is in ",m.span()[1])
     return m.span()[1]
 
 def find_genes(dna):
     genes = []
     s = 0
-    gn = []
     while True:
         a = dna.find("TATA", s)
         if a < 0:
@@ -35,23 +34,18 @@ def find_genes(dna):
         c = dna.find("TAC", a + 3)
         if c < 0:
             return genes
-        print('c1', a, b, c)
+        #print('c1', a, b, c)
         while c >= b and b != -1:
             a = b
             b = dna.find("TATA", a + 3)
             c = dna.find("TAC", a + 3)
-            print('c2', a, b, c)
+            #print('c2', a, b, c)
         e = find_gene(dna[c:]) + len (dna[:c])
         if e == len (dna[:c]) - 1:
             #print("There is no gene found")
             return genes
-        b = e
-        gn = [a, c, e]
-        if gn not in genes:
-            genes.append(gn)
-            s = c
-        else:
-            return genes
+        genes.append((a, c, e))
+        s = e + 3
 
 def main():
     rna = ""
@@ -69,7 +63,8 @@ def main():
         print("Error in reading file")
 
 def test_genes():
-    print(find_genes('TATATACAAAAATT')) # TODO: test
+    print(find_genes('TATATACAAAAATT'))
+    print(find_genes('TATATACAAAATT'*10))
 
 
 
