@@ -25,7 +25,7 @@ class Nucleotide:
         #self.hgray = QColor(r, g, b, 50)
         #self.color = QColor(r, g, b, 100)
 
-        self.shape = QPolygon([QPoint(x, y) for (x, y) in points])
+        self.shape = QPolygon([QPoint(int(x), int(y)) for (x, y) in points])
         self.shape.translate(-80, -60)
         trans = QTransform()
         trans = trans.rotate(180)
