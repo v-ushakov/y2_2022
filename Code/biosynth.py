@@ -1,5 +1,24 @@
 import re
 
+def find_slice(seq):
+    slices = []
+    new = seq
+    gu = seq.find("CA")
+    ag = seq.find("TC")
+    while gu >= 0 and ag >=0:
+        print("GU is ", gu, "UC is ", ag )
+        if gu < ag:
+            slices.append([gu, ag+1])
+            a = seq[gu: ag+2]
+            print(new, a)
+            new =
+            gu = seq.find("CA", ag + 1)
+            ag = seq.find("TC", ag + 1)
+
+    return new, slices, seq
+
+
+
 
 def reading_letters(fil):
     dna = ''
@@ -74,7 +93,8 @@ def test_genes():
 
 
 if __name__ == "__main__":
-    test_genes()
+    print(find_slice("ACAPATC"))
+    #test_genes()
 
 
 

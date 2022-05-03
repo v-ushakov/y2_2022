@@ -1,16 +1,20 @@
 import sys
+import dna_paint
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor, QIcon, QPainter, QPen, QBrush, QPolygon, QColor
 from PyQt5.QtCore import Qt, QPoint
 
+def clear(wid):
+    wid.hide()
+
 def start():
     app = QApplication(sys.argv)
     window = QWidget()
     window.setWindowTitle("Protein synthesis")
     window.setFixedWidth(1500)
-    window.move(100, 100)
+    window.move(200, 200)
     window.setStyleSheet("background : #beb1c7;")##beb1c7#ab9bb7
 
     grid = QGridLayout()
@@ -40,6 +44,7 @@ def start():
                          "*:hover{background: '#94ca6d';}"
 
                          )
+    #button.clicked.connect(clear(window))
 
 
     #grid.addWidget(logo, 0, 0)
@@ -47,6 +52,9 @@ def start():
 
 
 
-window.setLayout(grid)
-window.show()
-sys.exit(app.exec())
+    window.setLayout(grid)
+    window.show()
+    sys.exit(app.exec())
+
+if __name__ == "__main__":
+    start()
