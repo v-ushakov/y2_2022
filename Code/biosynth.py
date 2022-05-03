@@ -49,16 +49,25 @@ def find_genes(dna):
         a = dna.find("TATA", s)
         if a < 0:
             break
-        b = dna.find("TATA", a + 3)
-        c = dna.find("TAC", a + 3)
+        b = dna.find("TATA", a + 4)
+        c = dna.find("TAC",  a + 4)
         if c < 0:
             break
         #print('c1', a, b, c)
         while c >= b and b != -1:
             a = b
-            b = dna.find("TATA", a + 3)
-            c = dna.find("TAC", a + 3)
-            #print('c2', a, b, c)
+            b = dna.find("TATA", a + 4)
+            c = dna.find("TAC",  a + 4)
+
+        # 0. c = position of TAC
+        # 1. find next possible intron GU...AG from 'c'
+        # 2. find an aligned stop codon from 'c' to GU or anywhere if no intron
+        # 3. if found: append a gene and continue the main loop
+        # 4. append [GU:AG+2] into intron list
+        # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
+        # 6. if so append a gene and continue the main loop
+        # 7. align 'c' to the next exon and repeat from 1.
+
         e = find_gene(dna[c:]) + len (dna[:c])
         if e == len (dna[:c]) - 1:
             #print("There is no gene found")
