@@ -2,23 +2,18 @@ import re
 
 def find_slice(seq):
     slices = []
-    new = ''
-    gu = seq.find("GT")
-    ag = seq.find("AG")
+    new = seq
+    gu = seq.find("CA")
+    ag = seq.find("TC")
     while gu >= 0 and ag >=0:
         print("GU is ", gu, "UC is ", ag )
         if gu < ag:
             slices.append([gu, ag+1])
             a = seq[gu: ag+2]
             print(new, a)
-            gu = seq.find("GT", ag + 1)
-            ag = seq.find("AG", ag + 1)
-
-    for a in range(len(slices)):
-        if a == 0:
-            new += seq[:slices[a][0]]
-        else:
-            new += seq[slices[a-1][1]:slices[a][0]]
+            #new =
+            gu = seq.find("CA", ag + 1)
+            ag = seq.find("TC", ag + 1)
 
     return new, slices, seq
 
@@ -51,64 +46,60 @@ def reading_letters(fil):
     #print("dna is :", dna)
     return dna
 
-def find_gene(dna):
-    # stops: ATT, ATC, ACT
-    m = re.match(("(...)*?T(AA|AG|GA)"), dna)
-    if m == None:
-        return -1
-    #print("m is in", m.span()[1])
-    return m.span()[1]
+
+# complementary pairs: A-T/U G-C
+
+re_tata   = re.compile('TATA')                  # TATA box on 3'->5' strand
+re_tatac  = re.compile('TATA|TAC')              # TATA box or start codon
+re_intron = re.compile('GU.*AG')
+re_stop   = re.compile('(...)*?(ATT|ATC|ACT)')  # match, don't search
+
+def next_gene(dna, pos):
+    m = re_tata.search(dna, pos)
+    while m.group(0) == 'TATA':
+        tata = m.start()
+        m = re_tatac.search(dna, tata + 4)
+    tac = m.start()
+
+    print(tata, tac)
+
+    introns = []
+    # 0. pos is the position after TAC
+    pos = tac + 3
+    while True:
+        # 1. find next possible intron GU...AG from 'pos'
+        intron = re_intron.search(dna, pos)
+        print('intron(%u):' % pos, intron)
+        # 2. find an aligned stop codon from 'pos' to GU or anywhere if no GU
+        stop = re_stop.match(dna, pos, intron.start() if intron else len(dna))
+        print('stop(%u):' % pos, stop)
+        # 3. if found: append a gene and continue the main loop
+        if stop:
+            return (tata, tac, stop.end(), introns)
+        # 4. append [GU:AG+2] into intron list
+        introns.append(intron.span())
+        # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
+        gu, ag = intron.span()
+        rem = (gu - pos) % 3
+        pos = ag + 3 - rem
+        print('gu---ag=%u---%u; rem=%u, new pos=%u' % (gu, ag, rem, pos))
+        # 6. if so append a gene and continue the main loop
+        if re_stop.match(dna[gu-rem:gu] + dna[ag:pos]):
+            return (tata, tac, pos, introns)
+        # 7. align 'pos' to the next exon and repeat
+
 
 def find_genes(dna):
-    stops = ['TAA', 'TAG', 'TGA']
+    print('find_genes(%s)' % dna)
     genes = []
-
-    s = 0
-    while True:
-        a = dna.find("TATA", s)
-        if a < 0:
-            break
-        b = dna.find("TATA", a + 4)
-        c = dna.find("ATG",  a + 4)
-        if c < 0:
-            break
-        #print('c1', a, b, c)
-        while c >= b and b != -1:
-            a = b
-            b = dna.find("TATA", a + 4)
-            c = dna.find("ATG",  a + 4)
-        pos = c+3
-        e = 0
-        slices = []
-        while e == 0:
-            new = ''
-            gu = dna.find("GT", pos)
-            ag = dna.find("AG", gu + 2)
-            if gu < ag and gu != -1 and ag != -1 :
-                stop = find_gene(dna[pos:gu])
-                if stop == -1:
-                    slices.append([gu, ag + 2])
-                    rem = (gu-pos)%3
-                    if dna[gu-rem:gu] + dna[ag + 2:ag + 5 - rem]  in stops:
-                        e = ag+5-rem
-                    else:
-                        pos = ag + 2
-                else:
-                    e = stop + len(dna[:pos])
-            else:
-                e = find_gene(dna[pos:]) + len(dna[:pos])
-                if e == len(dna[:pos]) - 1:
-                    return []
-
-        pos = c
-        for (s, f) in slices:
-            new += dna[pos:s]
-            pos = f
-        new += dna[pos:e]
-
-        genes.append((a, c, e, slices, new))
-        s = e
-    return genes
+    pos = 0
+    try:
+        while True:
+            g = next_gene(dna, pos)
+            genes.append(g)
+            pos = g[2]
+    except AttributeError as e:
+        return genes
 
 def main():
     rna = ""
@@ -128,20 +119,21 @@ def main():
 
 
 def test_genes():
-    #print(find_genes(''))
-    #print(find_genes('TATAATGAAAATAA')) #should not work
-    #print(find_genes('TATAATGAAATAA'))
-    print(find_genes('TATAATGAAATAA'*10))
-    #print(find_genes('TATAATGAAAGTUUUUAGTAA'*3))
-    #print(find_genes('TATAATGAAATGTUUUUAGAA'))
-    #print(find_genes('TATAATGAAATGTUUUUAGAATATAATGAAAGTUUUUAGTAATATAATGAAATAA'))
+    dnas = [
+        #'TATATACATT',
+        #'TATATACAAAAATT',
+        #'TATATACAAAATT'*10,
+        #'CACATATAAAAAAAAAAATATATACATT',
+        'ATCTATAACTTCACACTGTACCCACCCCCAGGAGUTTAGATC',
+    #              111111111122222222223333333333444444444455555555556666666666
+    #    0123456789012345678901234567890123456789012345678901234567890123456789
+    ]
+    for dna in dnas:
+        print(find_genes(dna))
+
+
 
 if __name__ == "__main__":
-    #print(find_slice("AAGTUUUAGAA"))
-    #test_genes()
+    #print(find_slice("ACAPATC"))
+    test_genes()
     print(proteins('AAABBBCCC'))
-
-
-
-
-
