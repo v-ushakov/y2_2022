@@ -135,11 +135,15 @@ class DNA_view(QWidget):
         try:
             painter = QPainter(self)
             painter.save()
-            a = (ev.rect().x())//36
-            b = (ev.rect().x() + ev.rect().width()+35)//36
-            painter.translate(36*a, 10)
+            leftmost = (ev.rect().x())//36
+            rightmost = (ev.rect().x() + ev.rect().width()+35)//36
+            painter.translate(36*leftmost, 10)
 
-            for x in self.dna[a:b+1]:
+
+            # find the leftmost gene that is on the screen
+
+            for pos in range(leftmost, rightmost+1):
+                x = self.dna[pos]
                 n = dn[x]
                 painter.save()
                 painter.translate(0, (self.counterDNA) * 2)
