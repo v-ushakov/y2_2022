@@ -50,22 +50,22 @@ def reading_letters(fil):
 # complementary pairs: A-T/U G-C
 
 re_tata   = re.compile('TATA')                  # TATA box on 3'->5' strand
-re_tatac  = re.compile('TATA|TAC')              # TATA box or start codon
-re_intron = re.compile('GU.*AG')
-re_stop   = re.compile('(...)*?(ATT|ATC|ACT)')  # match, don't search
+re_tatac  = re.compile('TATA|ATG')              # TATA box or start codon
+re_intron = re.compile('GU.*?AG')
+re_stop   = re.compile('(...)*?(TAA|TAG|TGA)')  # match, don't search
 
 def next_gene(dna, pos):
     m = re_tata.search(dna, pos)
     while m.group(0) == 'TATA':
         tata = m.start()
         m = re_tatac.search(dna, tata + 4)
-    tac = m.start()
+    start = m.start()
 
-    print(tata, tac)
+    print(tata, start)
 
     introns = []
-    # 0. pos is the position after TAC
-    pos = tac + 3
+    # 0. pos is the position after ATG
+    pos = start + 3
     while True:
         # 1. find next possible intron GU...AG from 'pos'
         intron = re_intron.search(dna, pos)
@@ -75,7 +75,7 @@ def next_gene(dna, pos):
         print('stop(%u):' % pos, stop)
         # 3. if found: append a gene and continue the main loop
         if stop:
-            return (tata, tac, stop.end(), introns)
+            return (tata, start, stop.end(), introns)
         # 4. append [GU:AG+2] into intron list
         introns.append(intron.span())
         # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
@@ -85,7 +85,7 @@ def next_gene(dna, pos):
         print('gu---ag=%u---%u; rem=%u, new pos=%u' % (gu, ag, rem, pos))
         # 6. if so append a gene and continue the main loop
         if re_stop.match(dna[gu-rem:gu] + dna[ag:pos]):
-            return (tata, tac, pos, introns)
+            return (tata, start, pos, introns)
         # 7. align 'pos' to the next exon and repeat
 
 
@@ -120,11 +120,11 @@ def main():
 
 def test_genes():
     dnas = [
-        #'TATATACATT',
-        #'TATATACAAAAATT',
-        #'TATATACAAAATT'*10,
-        #'CACATATAAAAAAAAAAATATATACATT',
-        'ATCTATAACTTCACACTGTACCCACCCCCAGGAGUTTAGATC',
+        'TATAATGTAA',
+        'TATAATGAAAATAA',
+        'TATAATGAAATAA'*10,
+        'CACATATAAAAAAAAAAATATAATGTAA',
+        'TAGTATAACTTCACACTGATGCCACCCCCAGGAGUTTAGTAG',
     #              111111111122222222223333333333444444444455555555556666666666
     #    0123456789012345678901234567890123456789012345678901234567890123456789
     ]
@@ -134,6 +134,6 @@ def test_genes():
 
 
 if __name__ == "__main__":
-    #print(find_slice("ACAPATC"))
+    #print(find_slice("ACAPTAG"))
     test_genes()
     print(proteins('AAABBBCCC'))
