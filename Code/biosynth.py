@@ -22,6 +22,18 @@ def find_slice(seq):
 
     return new, slices, seq
 
+def proteins(seq):
+    prot = []
+    start = 0
+    for a in range(3, len(seq)+1,3):
+        prot.append(seq[start:a])
+        start = a
+    return prot
+
+        #if a%3 == 0:
+
+
+
 
 
 
@@ -113,6 +125,8 @@ def main():
     else:
         print("Error in reading file")
 
+
+
 def test_genes():
     #print(find_genes(''))
     #print(find_genes('TATAATGAAAATAA')) #should not work
@@ -124,7 +138,9 @@ def test_genes():
 
 if __name__ == "__main__":
     #print(find_slice("AAGTUUUAGAA"))
-    test_genes()
+    #test_genes()
+    print(proteins('AAABBBCCC'))
+
 
 
 

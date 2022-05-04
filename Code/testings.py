@@ -1,5 +1,5 @@
 import unittest
-from biosynth import reading_letters, find_genes
+from biosynth import reading_letters, find_genes, proteins
 #from dna_paint import
 from io import StringIO
 
@@ -21,6 +21,9 @@ class TestLetters(unittest.TestCase):
 
         self.assertEqual(find_genes('TATAATGAAATAA'),  [(0, 4, 13, [], 'ATGAAATAA')], "Gene")
         self.assertEqual(find_genes('TATAATGAAATGTUUUUAGAA'), [(0, 4, 21, [[11, 19]], 'ATGAAATAA')], "Gene with an exon")
+
+    def test_protein_tripleting(self):
+        self.assertEqual(proteins('AAABBBCCC'), ['AAA', 'BBB', 'CCC'], 'Gene splitting into triplets')
 
 if __name__ == '__main__':
     unittest.main()

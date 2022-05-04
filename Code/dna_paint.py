@@ -2,8 +2,9 @@ from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSli
                             QVBoxLayout, QPushButton
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
 from PyQt5.QtCore import Qt, QPoint, QTimer
+from statistics import mean
 from biosynth import reading_letters as rl
-from biosynth import find_genes
+from biosynth import find_genes, proteins
 
 import math
 from amino import aminos, Yellow, Pink, Green, Blue
@@ -63,12 +64,16 @@ Nucleotide('C', 200,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
 
 OUT = 70
 
+
 class DNA_view(QWidget):
 
     M_WHOLE     = 1 # the whole genome is shown
     M_ZOOM      = 2 # zooming to a particular gene
     M_SPLICE    = 3 # squishing introns
     M_PROTEIN   = 4 # translation and protein synthesis
+
+    def numAmins(self):
+        return len(self.gene[4])//3
 
     def __init__(self, dna):
         super().__init__()
@@ -92,11 +97,14 @@ class DNA_view(QWidget):
         self.color_timer = QTimer()
         self.color_timer.timeout.connect(self.timerColor)
 
+        self.prot_timer = QTimer()
+        self.prot_timer.timeout.connect(self.setProt)
+
         self.color_count = 0
         self.counter = 0
         self.counterDNA = 0
         self.stage = 1
-
+        self.prot_counter = 0
 
 
 
@@ -148,7 +156,8 @@ class DNA_view(QWidget):
             inlen = introns[-1][2] if introns else 0
             width = 36*(end - start) - round(36*inlen*self.zoom/100.0)
         elif self.mode == self.M_PROTEIN:
-            width = 0           # TODO: Masha
+            _, _, _, _, genome = self.gene
+            width = 36*len(genome)
         else:
             width = 0
         self.resize(width, 300)
@@ -161,6 +170,11 @@ class DNA_view(QWidget):
         self.zoom = zoom
         self.fitGenome()
         self.repaint()
+
+    def setProt(self, num):
+        self.prot_counter = num
+        self.repaint()
+
 
     #---------------------------------------------------------------------------
     # Mode      Comment         Animations
@@ -250,8 +264,47 @@ class DNA_view(QWidget):
             painter.translate(36, 0)
 
     def paintProtein(self, ev, painter):
-        # TODO: paint self.gene and associated proteins
-        pass
+
+        _, _, _, _, genome = self.gene
+        center = []
+        for a in genome:
+            center.append(nucleotides[a].rshape.boundingRect().center().y())
+        y_center = mean(center)
+        leftmost = (ev.rect().x()) // 36
+        rightmost = (ev.rect().x() + ev.rect().width() + 35) // 36
+
+        painter.translate(36 * leftmost, 10)
+        painter.save()
+        for pos in range(leftmost, rightmost):
+            x = nucleotides[genome[pos]]
+            x.draw(painter, 0, True)
+            painter.translate(36, 0)
+        painter.restore()
+
+        painter.save()
+
+        triplets = proteins(genome)
+        print(triplets)
+
+        for pos in range(leftmost, rightmost, 3):
+            x = nucleotides[genome[pos]]
+            am = triplets[int(pos/3)]
+            if self.prot_counter > pos/3:
+                painter.setPen(QPen(Qt.black, 3, Qt.SolidLine))
+                if aminos[am] in Yellow:
+                    col = Qt.yellow
+                elif aminos[am] in Green:
+                    col = Qt.green
+                elif aminos[am] in Pink:
+                    col = QColor(150,0,150)
+                elif aminos[am] in Blue:
+                    col = Qt.blue
+                painter.setBrush(QBrush(col, Qt.SolidPattern))
+                painter.drawEllipse(QPoint(leftmost+ 35*1.5 ,y_center + 35*2.3), 36*1.5, 36*1.5)
+                painter.drawText(QPoint(leftmost+ 34*1.5 ,y_center + 35*2.3), aminos[am])
+
+                painter.translate(36*3, 0)
+        painter.restore()
 
     def paintEvent(self, ev):
         try:
@@ -270,11 +323,12 @@ class DNA_view(QWidget):
     def start_trans(self):
         self.counter = 0
         self.color_count = 0
-        self.timer.start(50)
+        self.prot_timer.start(50)
 
     def keyReleaseEvent(self, ev):
         print(ev.key())
         if ev.key() == 32:
+            #self.start_trans()
             self.start_trans()
         elif ev.key() == 67:
             self.color_count = 0
@@ -286,7 +340,7 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view('AACCCCAATATACCATGAAACCCGGGAAATAA'*3)        #    rl("dna_sequence")
+    dna = DNA_view('AACCCCAATATACCATGAAACCCGATGGGAAATAA'*3)        #    rl("dna_sequence")
 
     win = QScrollArea()
     win.setWidget(dna)
@@ -306,6 +360,9 @@ if __name__ == "__main__":
     slider4 = QSlider(Qt.Horizontal)
     slider4.setRange(0, 100)
     slider4.valueChanged.connect(dna.setZoom)
+    slider5 = QSlider(Qt.Horizontal)
+    slider5.setRange(0, dna.numAmins())
+    slider5.valueChanged.connect(dna.setProt)
 
 
 
@@ -325,6 +382,7 @@ if __name__ == "__main__":
     layout.addWidget(slider2)
     layout.addWidget(slider3)
     layout.addWidget(slider4)
+    layout.addWidget(slider5)
     layout.addWidget(button1)
 
     panel = QWidget()
