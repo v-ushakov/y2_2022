@@ -51,7 +51,7 @@ def reading_letters(fil):
 
 re_tata   = re.compile('TATA')                  # TATA box on 3'->5' strand
 re_tatac  = re.compile('TATA|ATG')              # TATA box or start codon
-re_intron = re.compile('GU.*?AG')
+re_intron = re.compile('GT.*?AG')
 re_stop   = re.compile('(...)*?(TAA|TAG|TGA)')  # match, don't search
 
 def next_gene(dna, pos):
