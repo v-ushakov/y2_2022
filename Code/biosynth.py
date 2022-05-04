@@ -2,7 +2,7 @@ import re
 
 def find_slice(seq):
     slices = []
-    new = seq
+    new = ''
     gu = seq.find("GT")
     ag = seq.find("AG")
     while gu >= 0 and ag >=0:
@@ -11,9 +11,14 @@ def find_slice(seq):
             slices.append([gu, ag+1])
             a = seq[gu: ag+2]
             print(new, a)
-            #new =
             gu = seq.find("GT", ag + 1)
             ag = seq.find("AG", ag + 1)
+
+    for a in range(len(slices)):
+        if a == 0:
+            new += seq[:slices[a][0]]
+        else:
+            new += seq[slices[a-1][1]:slices[a][0]]
 
     return new, slices, seq
 
@@ -45,6 +50,7 @@ def find_gene(dna):
 def find_genes(dna):
     stops = ['TAA', 'TAG', 'TGA']
     genes = []
+
     s = 0
     while True:
         a = dna.find("TATA", s)
@@ -63,6 +69,7 @@ def find_genes(dna):
         e = 0
         slices = []
         while e == 0:
+            new = ''
             gu = dna.find("GT", pos)
             ag = dna.find("AG", gu + 2)
             if gu < ag and gu != -1 and ag != -1 :
@@ -81,23 +88,13 @@ def find_genes(dna):
                 if e == len(dna[:pos]) - 1:
                     return []
 
+        pos = c
+        for (s, f) in slices:
+            new += dna[pos:s]
+            pos = f
+        new += dna[pos:e]
 
-
-
-        # 0. c = position of TAC
-        # 1. find next possible intron GU...AG from 'c'
-        # 2. find an aligned stop codon from 'c' to GU or anywhere if no intron
-        # 3. if found: append a gene and continue the main loop
-        # 4. append [GU:AG+2] into intron list
-        # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
-        # 6. if so append a gene and continue the main loop
-        # 7. align 'c' to the next exon and repeat from 1.
-
-        #e = find_gene(dna[pos:]) + len (dna[:pos])
-        #if e == len (dna[:pos]) - 1:
-            #print("There is no gene found")
-            #break
-        genes.append((a, c, e, slices))
+        genes.append((a, c, e, slices, new))
         s = e
     return genes
 
@@ -117,17 +114,16 @@ def main():
         print("Error in reading file")
 
 def test_genes():
-    print(find_genes('TATAATGAAAATAA')) #should not work
-    #print(find_genes('TATAATGAAATAA'*3))
-    #print(find_genes('TATAATGAAATAA'*10))
+    #print(find_genes(''))
+    #print(find_genes('TATAATGAAAATAA')) #should not work
+    #print(find_genes('TATAATGAAATAA'))
+    print(find_genes('TATAATGAAATAA'*10))
     #print(find_genes('TATAATGAAAGTUUUUAGTAA'*3))
     #print(find_genes('TATAATGAAATGTUUUUAGAA'))
     #print(find_genes('TATAATGAAATGTUUUUAGAATATAATGAAAGTUUUUAGTAATATAATGAAATAA'))
 
-
-
 if __name__ == "__main__":
-    #print(find_slice("ACAPATC"))
+    #print(find_slice("AAGTUUUAGAA"))
     test_genes()
 
 

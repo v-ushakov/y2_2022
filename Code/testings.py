@@ -19,10 +19,8 @@ class TestLetters(unittest.TestCase):
         self.assertEqual(find_genes('TATATAC'),        [], "No jeans case 4")
         self.assertEqual(find_genes('TATAATGAAAATAA'), [], "Unaligned stop")
 
-        self.assertEqual(find_genes('TATAATGAAATAA'),  [(0, 4, 13, [])], "Gene")
-        self.assertEqual(find_genes('TATAATGAAATGTUUUUAGAA'), [(0, 4, 21, [[11, 19]])], "Gene with an exon")
-
-
+        self.assertEqual(find_genes('TATAATGAAATAA'),  [(0, 4, 13, [], 'ATGAAATAA')], "Gene")
+        self.assertEqual(find_genes('TATAATGAAATGTUUUUAGAA'), [(0, 4, 21, [[11, 19]], 'ATGAAATAA')], "Gene with an exon")
 
 if __name__ == '__main__':
     unittest.main()
