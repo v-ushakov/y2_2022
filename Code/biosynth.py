@@ -64,6 +64,7 @@ def next_gene(dna, pos):
     print(tata, start)
 
     introns = []
+    total = 0                                           # total size of introns
     # 0. pos is the position after ATG
     pos = start + 3
     while True:
@@ -77,9 +78,10 @@ def next_gene(dna, pos):
         if stop:
             return (tata, start, stop.end(), introns)
         # 4. append [GU:AG+2] into intron list
-        introns.append(intron.span())
-        # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
         gu, ag = intron.span()
+        total += ag - gu
+        introns.append((gu, ag, total))
+        # 5. [GU//3*3:GU] + [AG:AG+2]: check whether it starts with a stop codon
         rem = (gu - pos) % 3
         pos = ag + 3 - rem
         print('gu---ag=%u---%u; rem=%u, new pos=%u' % (gu, ag, rem, pos))
