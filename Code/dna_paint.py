@@ -82,7 +82,7 @@ class DNA_view(QWidget):
         self.dna = dna
         self.genes = find_genes(dna)
         #-----------------------------------------------------------------------
-        self.mode = self.M_WHOLE
+        self.mode = self.M_PROTEIN
         self.gene = self.genes[0]           # an item from self.genes       TODO
         #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
@@ -366,8 +366,8 @@ class DNA_view(QWidget):
                 elif aminos[am] in Blue:
                     col = Qt.blue
                 painter.setBrush(QBrush(col, Qt.SolidPattern))
-                painter.drawEllipse(QPoint(leftmost+ 35*1.5 ,y_center + 35*2.3), 36*1.5, 36*1.5)
-                painter.drawText(QPoint(leftmost+ 34*1.5 ,y_center + 35*2.3), aminos[am])
+                painter.drawEllipse(QPoint(int(leftmost+ 35*1.5), int(y_center + 35*2.3)), 36*1.5, 36*1.5)
+                painter.drawText(QPoint(int(leftmost+ 34*1.5), int(y_center + 35*2.3)), aminos[am])
 
                 painter.translate(36*3, 0)
         painter.restore()
