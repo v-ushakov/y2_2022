@@ -76,7 +76,7 @@ class DNA_view(QWidget):
         self.dna = dna
         self.genes = find_genes(dna)
         #-----------------------------------------------------------------------
-        self.mode = self.M_ZOOM
+        self.mode = self.M_WHOLE
         self.gene = self.genes[1]           # an item from self.genes       TODO
         #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
@@ -179,11 +179,11 @@ class DNA_view(QWidget):
             x = nucleotides[self.dna[pos]]
             painter.save()
             painter.translate(0, (self.counterDNA) * 2)
-            x.draw(painter, grayness, False)
+            x.complement().draw(painter, grayness, False)
             painter.restore()
             painter.save()
             painter.translate(0, (self.counter - OUT)*2)
-            x.complement().draw(painter, grayness, True)
+            x.draw(painter, grayness, True)
             painter.restore()
             painter.translate(36, 0)
 
@@ -201,11 +201,11 @@ class DNA_view(QWidget):
             x = nucleotides[self.dna[pos]]
             painter.save()
             painter.translate(0, (self.counterDNA) * 2)
-            x.draw(painter, self.color_count, False)
+            x.complement().draw(painter, self.color_count, False)
             painter.restore()
             painter.save()
             painter.translate(0, (self.counter - OUT)*2)
-            x.complement().draw(painter, 0, True)
+            x.draw(painter, 0, True)
             painter.restore()
             painter.translate(36, 0)
         painter.restore()
