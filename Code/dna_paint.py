@@ -69,8 +69,9 @@ class DNA_view(QWidget):
 
     M_WHOLE     = 1 # the whole genome is shown
     M_ZOOM      = 2 # zooming to a particular gene
-    M_SPLICE    = 3 # squishing introns
-    M_PROTEIN   = 4 # translation and protein synthesis
+    M_INTRONS   = 3 # highlighting introns
+    M_SPLICE    = 4 # squashing introns
+    M_PROTEIN   = 5 # translation and protein synthesis
 
     def numAmins(self):
         return len(self.gene[4])//3
@@ -81,8 +82,8 @@ class DNA_view(QWidget):
         self.dna = dna
         self.genes = find_genes(dna)
         #-----------------------------------------------------------------------
-        self.mode = self.M_PROTEIN
-        self.gene = self.genes[1]           # an item from self.genes       TODO
+        self.mode = self.M_INTRONS
+        self.gene = self.genes[0]           # an item from self.genes       TODO
         #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
         #-----------------------------------------------------------------------
@@ -151,6 +152,9 @@ class DNA_view(QWidget):
             inlen = end - start
             outlen = len(self.dna) - inlen
             width = 36*inlen + round(36*outlen*(100 - self.zoom)/100.0)
+        elif self.mode == self.M_INTRONS:
+            _, start, end, *_ = self.gene
+            width = 36*(end - start)
         elif self.mode == self.M_SPLICE:
             _, start, end, introns = self.gene
             inlen = introns[-1][2] if introns else 0
@@ -163,7 +167,8 @@ class DNA_view(QWidget):
         self.resize(width, 300)
 
     def setMode(self, mode):
-        self.mode = mode        # TODO: call fitGenome etc.
+        self.mode = mode
+        self.fitGenome()
         self.repaint()
 
     def setZoom(self, zoom):
@@ -177,14 +182,18 @@ class DNA_view(QWidget):
 
 
     #---------------------------------------------------------------------------
-    # Mode      Comment         Animations
+    # Mode      Comment             Animations
     # --------------------------------------------------------------------------
     # M_WHOLE   whole genome        (a) top 5'->3' strand float
     #                               (b) fading non-coding segments
     #                               (c) gene selection?
     # M_ZOOM    zooming to a gene   ???
-    # M_SPLICE  cutting introns     (a) graying introns
-    #                               (b) squishing introns
+    #
+    # M_INTRONS highlight introns   (a) graying introns
+    #                               (b) dropping introns
+    # M_SPLICE  squash introns      (a) squashing introns
+    #
+    # M_PROTEIN translate protein   ???
     # --------------------------------------------------------------------------
 
     def paintWholeGenome(self, ev, painter):
@@ -248,20 +257,68 @@ class DNA_view(QWidget):
             painter.translate(36, 0)
 
 
-    def paintSplice(self, ev, painter):
+    def paintIntrons(self, ev, painter):
 
-        _, start, end, introns = self.gene
-
-        #for i in range(len(introns)):
+        _, start, end, *_ = self.gene
 
         leftmost  = (ev.rect().x())//36
         rightmost = (ev.rect().x() + ev.rect().width() + 35)//36
 
         painter.translate(36*leftmost, 10)
-        for pos in range(start + leftmost, start + rightmost+1):
-            x = nucleotides[self.dna[pos]]
-            x.draw(painter, 0, True)
+        for pos in range(leftmost, rightmost):
+            #grayness = 0
+            #if pos < start or pos >= end:
+                #grayness = min(self.zoom * 2, 100)
+
+            painter.save()
+            painter.translate(0, (self.counter - OUT)*2)
+            nucleotides[self.dna[pos]].draw(painter, 0, True)
+            painter.restore()
             painter.translate(36, 0)
+
+
+    def paintSplice(self, ev, painter):
+
+        _, start, end, introns = self.gene
+
+        pos = start
+        delta = 0
+        i = 0
+        while i < len(introns):                         # TODO: binary search?
+            _, e, total = introns[i]
+            lastx = 36*(e - start) - round(36*total*(100 - self.zoom)/100.0)
+            if lastx > ev.rect().x():
+                break
+            pos = e
+            delta = lastx
+            i += 1
+
+        rect_l = ev.rect().x()                     - delta
+        rect_r = ev.rect().x() + ev.rect().width() - delta
+        painter.translate(delta, 10)
+
+        # TODO: skip more
+        while i < len(introns):
+            s, e, _ = introns[i]
+            while pos < s:
+                if rect_r <= 0:
+                    return
+                nucleotides[self.dna[pos]].draw(painter, 0, True)
+                painter.translate(36, 0)
+                pos += 1
+                rect_r -= 36
+            pos = e
+            delta = round(36*(e - s)*(100 - self.zoom)/100.0)
+            painter.translate(delta, 0)
+            rect_r -= delta
+            i += 1
+
+        while pos < end and rect_r > 0:
+            nucleotides[self.dna[pos]].draw(painter, 0, True)
+            painter.translate(36, 0)
+            pos += 1
+            rect_r -= 36
+
 
     def paintProtein(self, ev, painter):
 
@@ -313,6 +370,8 @@ class DNA_view(QWidget):
                 self.paintWholeGenome(ev, painter)
             elif self.mode == self.M_ZOOM:
                 self.paintZoom(ev, painter)
+            elif self.mode == self.M_INTRONS:
+                self.paintIntrons(ev, painter)
             elif self.mode == self.M_SPLICE:
                 self.paintSplice(ev, painter)
             elif self.mode == self.M_PROTEIN:
@@ -340,7 +399,7 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view('AACCCCAATATACCATGAAACCCGATGGGAAATAA'*3)        #    rl("dna_sequence")
+    dna = DNA_view('TATAATG'+'CTAGTCCCCAG'*7+'TAA')
 
     win = QScrollArea()
     win.setWidget(dna)
