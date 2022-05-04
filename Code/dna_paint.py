@@ -204,7 +204,7 @@ class DNA_view(QWidget):
         # paint nucleotides
         painter.save()
         painter.translate(36*leftmost, 10)
-        for pos in range(leftmost, rightmost+1):
+        for pos in range(leftmost, rightmost):
             x = nucleotides[self.dna[pos]]
             painter.save()
             painter.translate(0, (self.counterDNA) * 2)
@@ -240,7 +240,7 @@ class DNA_view(QWidget):
         rightmost = (hidden + ev.rect().x() + ev.rect().width() + 35)//36
 
         painter.translate(36*leftmost - hidden, 10)
-        for pos in range(leftmost, rightmost+1):
+        for pos in range(leftmost, rightmost):
             grayness = 0
             if pos < start or pos >= end:
                 grayness = min(self.zoom * 2, 100)
@@ -424,7 +424,6 @@ if __name__ == "__main__":
     slider3 = QSlider(Qt.Horizontal)
     slider3.setRange(0, 100)
     slider3.valueChanged.connect(dna.setCounterDNA)
-
     slider4 = QSlider(Qt.Horizontal)
     slider4.setRange(0, 100)
     slider4.valueChanged.connect(dna.setZoom)
