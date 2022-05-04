@@ -82,7 +82,7 @@ class DNA_view(QWidget):
         self.dna = dna
         self.genes = find_genes(dna)
         #-----------------------------------------------------------------------
-        self.mode = self.M_INTRONS
+        self.mode = self.M_WHOLE
         self.gene = self.genes[0]           # an item from self.genes       TODO
         #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
@@ -156,7 +156,7 @@ class DNA_view(QWidget):
             _, start, end, *_ = self.gene
             width = 36*(end - start)
         elif self.mode == self.M_SPLICE:
-            _, start, end, introns = self.gene
+            _, start, end, introns, *_ = self.gene
             inlen = introns[-1][2] if introns else 0
             width = 36*(end - start) - round(36*inlen*self.zoom/100.0)
         elif self.mode == self.M_PROTEIN:
@@ -218,7 +218,7 @@ class DNA_view(QWidget):
         painter.restore()
 
         # underline genes
-        for tata, tac, stop, _ in self.genes:
+        for tata, tac, stop, *_ in self.genes:
             painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.SolidLine))
             painter.drawLine(tata*36,170, (tata+4)*36, 170)
 
@@ -259,7 +259,7 @@ class DNA_view(QWidget):
 
     def paintIntrons(self, ev, painter):
 
-        _, start, _, introns = self.gene
+        _, start, _, introns, _ = self.gene
 
         leftmost  = start + (ev.rect().x())//36
         rightmost = start + (ev.rect().x() + ev.rect().width() + 35)//36
@@ -288,7 +288,7 @@ class DNA_view(QWidget):
 
     def paintSplice(self, ev, painter):
 
-        _, start, end, introns = self.gene
+        _, start, end, introns, *_ = self.gene
 
         pos = start
         delta = 0
