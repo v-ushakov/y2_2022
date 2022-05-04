@@ -1,22 +1,5 @@
 import re
 
-def find_slice(seq):
-    slices = []
-    new = seq
-    gu = seq.find("CA")
-    ag = seq.find("TC")
-    while gu >= 0 and ag >=0:
-        print("GU is ", gu, "UC is ", ag )
-        if gu < ag:
-            slices.append([gu, ag+1])
-            a = seq[gu: ag+2]
-            print(new, a)
-            #new =
-            gu = seq.find("CA", ag + 1)
-            ag = seq.find("TC", ag + 1)
-
-    return new, slices, seq
-
 def proteins(seq):
     prot = []
     start = 0
@@ -24,13 +7,6 @@ def proteins(seq):
         prot.append(seq[start:a])
         start = a
     return prot
-
-        #if a%3 == 0:
-
-
-
-
-
 
 def reading_letters(fil):
     dna = ''
@@ -91,6 +67,17 @@ def next_gene(dna, pos):
         # 7. align 'pos' to the next exon and repeat
 
 
+def splice_gene(dna, gene):
+    tata, start, end, introns = gene
+    pos = start
+    spliced = ''
+    for s, e, _ in introns:
+        spliced += dna[pos:s]
+        pos = e
+    spliced += dna[pos:end]
+    return tata, start, end, introns, spliced
+
+
 def find_genes(dna):
     print('find_genes(%s)' % dna)
     genes = []
@@ -98,7 +85,7 @@ def find_genes(dna):
     try:
         while True:
             g = next_gene(dna, pos)
-            genes.append(g)
+            genes.append(splice_gene(dna, g))
             pos = g[2]
     except AttributeError as e:
         return genes
@@ -136,6 +123,5 @@ def test_genes():
 
 
 if __name__ == "__main__":
-    #print(find_slice("ACAPTAG"))
     test_genes()
     print(proteins('AAABBBCCC'))
