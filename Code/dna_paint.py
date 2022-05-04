@@ -259,20 +259,29 @@ class DNA_view(QWidget):
 
     def paintIntrons(self, ev, painter):
 
-        _, start, end, *_ = self.gene
+        _, start, _, introns = self.gene
 
-        leftmost  = (ev.rect().x())//36
-        rightmost = (ev.rect().x() + ev.rect().width() + 35)//36
+        leftmost  = start + (ev.rect().x())//36
+        rightmost = start + (ev.rect().x() + ev.rect().width() + 35)//36
 
-        painter.translate(36*leftmost, 10)
+        i = 0
+        while i < len(introns) and leftmost >= introns[i][1]: i += 1            # TODO: binary search?
+
+        painter.translate(36*(leftmost - start), 10)
         for pos in range(leftmost, rightmost):
-            #grayness = 0
-            #if pos < start or pos >= end:
-                #grayness = min(self.zoom * 2, 100)
+            grayness = 0
+            shift = 0
+            if i < len(introns):
+                s, e, _ = introns[i]
+                if pos >= s and pos < e:
+                    grayness = min(2*self.zoom, 100)
+                    shift = max(0, 2*self.zoom - 100)
+                elif pos >= e:
+                    i += 1
 
             painter.save()
-            painter.translate(0, (self.counter - OUT)*2)
-            nucleotides[self.dna[pos]].draw(painter, 0, True)
+            painter.translate(0, 2*shift)
+            nucleotides[self.dna[pos]].draw(painter, grayness, True)
             painter.restore()
             painter.translate(36, 0)
 
