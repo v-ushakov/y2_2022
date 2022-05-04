@@ -3,6 +3,8 @@
 import os.path as p, sys
 from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog
 
+import window
+
 
 app = QApplication(sys.argv)
 
@@ -12,4 +14,11 @@ app = QApplication(sys.argv)
 dlg = QFileDialog(
         caption='Please choose a file with DNA',
         directory=p.normpath(p.join(p.dirname(sys.argv[0]), '..', 'DNA')))
-dlg.exec()
+if not dlg.exec():
+    sys.exit(1)
+
+win = window.BioWindow()
+win.setWindowTitle(dlg.selectedFiles()[0])
+win.show()
+
+sys.exit(app.exec())
