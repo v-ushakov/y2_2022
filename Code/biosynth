@@ -11,14 +11,14 @@ app = QApplication(sys.argv)
 #dlg = QDialog()
 #dlg.exec()
 
-dlg = QFileDialog(
-        caption='Please choose a file with DNA',
-        directory=p.normpath(p.join(p.dirname(sys.argv[0]), '..', 'DNA')))
-if not dlg.exec():
-    sys.exit(1)
+#dlg = QFileDialog(
+        #caption='Please choose a file with DNA',
+        #directory=p.normpath(p.join(p.dirname(sys.argv[0]), '..', 'DNA')))
+#if not dlg.exec():
+    #sys.exit(1)
 
 win = window.BioWindow()
-win.setWindowTitle(dlg.selectedFiles()[0])
+#win.setWindowTitle(dlg.selectedFiles()[0])
 win.show()
 
 sys.exit(app.exec())
