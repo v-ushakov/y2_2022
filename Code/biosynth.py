@@ -1,26 +1,16 @@
 import re
 
-def find_slice(seq):
-    slices = []
-    new = ''
-    gu = seq.find("GT")
-    ag = seq.find("AG")
-    while gu >= 0 and ag >=0:
-        print("GU is ", gu, "UC is ", ag )
-        if gu < ag:
-            slices.append([gu, ag+1])
-            a = seq[gu: ag+2]
-            print(new, a)
-            gu = seq.find("GT", ag + 1)
-            ag = seq.find("AG", ag + 1)
 
-    for a in range(len(slices)):
-        if a == 0:
-            new += seq[:slices[a][0]]
-        else:
-            new += seq[slices[a-1][1]:slices[a][0]]
+def read_dna(fil):
+    dna = ''
+    with open(fil) as f:
+        for a in f:
+            a = a.strip().upper()
+            if re.search('[^ATCG]', a):
+                raise RuntimeError('Bad file contents')
+            dna += a
+    return dna
 
-    return new, slices, seq
 
 def proteins(seq):
     prot = []
@@ -30,26 +20,6 @@ def proteins(seq):
         start = a
     return prot
 
-        #if a%3 == 0:
-
-
-
-
-
-
-def reading_letters(fil):
-    dna = ''
-    with open(fil) as f:
-        a = f.readline().strip().upper()
-        while a != "":
-            dna += a
-            a = f.readline().strip().upper()
-    for i in dna:
-        if not i in ["A", "T", "C", "G"]:
-            print("There is a unacceptable letter")
-            return False
-    #print("dna is :", dna)
-    return dna
 
 def find_gene(dna):
     # stops: ATT, ATC, ACT
@@ -58,6 +28,7 @@ def find_gene(dna):
         return -1
     #print("m is in", m.span()[1])
     return m.span()[1]
+
 
 def find_genes(dna):
     stops = ['TAA', 'TAG', 'TGA']
@@ -110,22 +81,6 @@ def find_genes(dna):
         s = e
     return genes
 
-def main():
-    rna = ""
-    fil = "test_dna_error"#"dna_sequence"
-    dna = reading_letters(fil)
-    if dna != False:
-        DNA = find_genes(dna)
-        print(DNA)
-        for i in DNA:
-            print(dna[(i[0]): (i[2])])
-            print(dna[(i[1]): (i[2])])
-
-        print(rna)
-    else:
-        print("Error in reading file")
-
-
 
 def test_genes():
     #print(find_genes(''))
@@ -137,11 +92,5 @@ def test_genes():
     #print(find_genes('TATAATGAAATGTUUUUAGAATATAATGAAAGTUUUUAGTAATATAATGAAATAA'))
 
 if __name__ == "__main__":
-    #print(find_slice("AAGTUUUAGAA"))
     #test_genes()
     print(proteins('AAABBBCCC'))
-
-
-
-
-

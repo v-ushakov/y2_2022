@@ -1,5 +1,5 @@
 import unittest
-from biosynth import reading_letters, find_genes, proteins
+from biosynth import read_dna, find_genes, proteins
 #from dna_paint import
 from io import StringIO
 
@@ -8,8 +8,8 @@ class TestLetters(unittest.TestCase):
 
     def test_found(self):
 
-        self.assertEqual(False, reading_letters("test_dna_error"), False)
-        self.assertEqual('ACTAGTCACAC', reading_letters("unchangeble"), 'ACTAGTCACAC')
+        self.assertEqual(False, read_dna("test_dna_error"), False)
+        self.assertEqual('ACTAGTCACAC', read_dna("unchangeble"), 'ACTAGTCACAC')
 
     def test_gene_parsing(self):
 

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSli
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
 from PyQt5.QtCore import Qt, QPoint, QTimer
 from statistics import mean
-from biosynth import reading_letters as rl
+from biosynth import read_dna as rl
 from biosynth import find_genes, proteins
 
 import math
