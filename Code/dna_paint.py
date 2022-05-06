@@ -89,6 +89,9 @@ class DNAView(QWidget):
         self.stage = 1
         self.prot_counter = 0
 
+    def DNA(self):
+        return self.dna
+
     def setDNA(self, dna):
         self.dna = dna
         self.genes = find_genes(dna)
@@ -135,7 +138,7 @@ class DNAView(QWidget):
         else:
             width = 0
         self.resize(width, 300)
-        self.move(max(0, (self.parent().contentsRect().width() - width)/2)
+        self.move(max(0, (self.parent().contentsRect().width() - width)//2)
                                                     if self.parent() else 0, 0)
 
     def setMode(self, mode):

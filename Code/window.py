@@ -66,7 +66,7 @@ class BioWindow(QMainWindow):
 
         #--- tabs --------------------------------------------------------------
         pane = QWidget()
-        tabs.addTab(pane, 'Welcome')
+        tabs.addTab(pane, 'Genome')
         pane.setLayout(QGridLayout())
         file = self.file = QLabel(self.NO_FILE)
         file.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
@@ -78,7 +78,6 @@ class BioWindow(QMainWindow):
         pane.layout().setColumnStretch(0, 1)
 
         #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        tabs.addTab(QWidget(), 'Genome')
         tabs.addTab(QWidget(), 'Transcription')
         tabs.addTab(QWidget(), 'Splicing')
         tabs.addTab(QWidget(), 'Translation')
@@ -112,9 +111,9 @@ class BioWindow(QMainWindow):
         except Exception as e:
             QMessageBox(QMessageBox.Warning,
                                         'Cannot read DNA', str(e)).exec()
-            self.fileLoaded(False)
             self.dnav.setDNA('')
             self.file.setText(self.NO_FILE)
+            self.fileLoaded(False)
             return False
 
     def fileLoaded(self, ok):
@@ -126,6 +125,15 @@ class BioWindow(QMainWindow):
     def tabChanged(self, tab):
         self.prev.setEnabled(tab > 0)
         self.next.setEnabled(tab < 4 and self.file_loaded)
+        if tab == 0:
+            self.dnav.setMode(self.dnav.M_WHOLE if self.dnav.DNA()
+                                                        else self.dnav.M_SPLASH)
+        elif tab == 1:
+            pass
+        elif tab == 2:
+            pass
+        elif tab == 3:
+            pass
 
     def nextTab(self):
         self.tabs.setCurrentIndex(self.tabs.currentIndex() + 1)
