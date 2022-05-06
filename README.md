@@ -1,26 +1,21 @@
 # Y2_2022_29825
 # Proteiinin biosynteesi
 
-## Checkpoint1 
+## Palautus
 
 ## Tämänhetkiset ominaisuudet
 
-Mitä ominaisuuksia olet jo toteuttanut projektiisi?
+## File and directory structure
+- biosyth - main file for running
+- biosynth.py - reads file, finds genes, TATA-boxes, introns codones and amino acisds
+- dna_paint.py - paints the the DNA, RNA, animation and everything else.
+- window.py includes class of the main window 
+- testings.py - unit tests
+- amino.py - information tables about amino acids
+## Installation instructions
 
- - Projektillani on lakusivu, joka on kehitetty GUIstart tiedostossa, jonka käynnistyessä aukeaa aloitussive, missä nappula "Start Biosynthesis"
- - CodoneGraphicObj tiedostossa on kehitetty kodonien piirtäminen. Ohjelman käynnistäessä, se piirtää antaman kodonin oikessa muodossa ja oikeassa värissä.
+  NumPy, PyQt, 
 
- ## Käyttöohje
+## User instructions
 
- - Voiko ohjelmaa jo ajaa? Vain pikku osat eli ei
- - Kuinka ohjelma käynnistetään? Ajaamalla eri tiedostot voi vain testata niiden koodien toteutusta
-
- ## Aikataulu
-
- - Olen äyttänyt n 15 tuntia tähän mennessä
- - Onko ilmennyt muutoksia suunnitelman aikatauluun? - aikatauluun ei, mutta enemmän tehtävien suunnittelu muutui
-
- ## Muuta
-
- - Oletko joutunut tekemään muutoksia suunnitelmaasi? - kyllä, olen päättänyt tekemään aluksi GUI osuuden
-
+look at the documentation.
