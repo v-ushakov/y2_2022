@@ -10,14 +10,6 @@ from dna_paint       import DNAView
 def stdIcon(id):
     return QApplication.style().standardIcon(id)
 
-
-def interpolate(value, target, source = (0, 100)):
-    tmin, tmax = target
-    smin, smax = source
-    value = min(max(smax, smin), max(min(smax, smin), value))
-    return int(tmin + (value-smin)*(tmax-tmin)/(smax-smin))
-
-
 class BioWindow(QMainWindow):
 
     NO_FILE = 'No file selected'
@@ -115,8 +107,15 @@ class BioWindow(QMainWindow):
     def playStep(self, value):
         tab = self.tabs.currentIndex()
         if tab == 0:
-            self.dnav.setShiftTop(   interpolate(value, (0, 140)))
-            self.dnav.setShiftBottom(interpolate(value, (0,  50)))
+            pass
+
+        elif tab in [1, 3]:
+            self.dnav.setZoom(value)
+
+        elif tab == 2:
+            self.dnav.setMode(self.dnav.M_INTRONS if value < 1000
+                                                        else self.dnav.M_SPLICE)
+            self.dnav.setZoom(value % 1000)
 
     def openFileDialog(self):
         if self.odlg.exec():
@@ -149,31 +148,33 @@ class BioWindow(QMainWindow):
     def tabChanged(self, tab):
         self.prev.setEnabled(tab > 0)
         self.next.setEnabled(tab < 4 and self.file_loaded)
-        if tab == 0 and self.file_loaded:
-            self.dnav.setMode(self.dnav.M_WHOLE if self.dnav.DNA()
-                                                        else self.dnav.M_SPLASH)
-            self.dbg1.valueChanged.connect(self.dnav.setShiftTop)
-            self.dbg1.setRange(0, 140)
-            self.dbg2.valueChanged.connect(self.dnav.setShiftBottom)
-            self.dbg2.setRange(0, 200)
 
-            self.play.setRange(0, 100)
+        if tab == 0:
+            self.dnav.setMode(self.dnav.M_WHOLE if self.file_loaded else self.dnav.M_SPLASH)
+            self.play.setRange(0, 0)
+            self.play.setEnabled(False)
+
+        elif tab == 1:
+            self.dnav.setMode(self.dnav.M_ZOOM)
+            self.play.setRange(0, 1000)
+            self.play.setValue(0)
             self.play.setEnabled(True)
+
+        elif tab == 2:
+            self.dnav.setMode(self.dnav.M_INTRONS)
+            self.play.setRange(0, 1999)
+            self.play.setValue(0)
+            self.play.setEnabled(True)
+
+        elif tab == 3:
+            self.dnav.setMode(self.dnav.M_PROTEIN)
+            self.play.setRange(0, 1000)
+            self.play.setValue(0)
+            self.play.setEnabled(True)
+
         else:
             self.play.setRange(0, 0)
             self.play.setEnabled(False)
-            try:
-                self.dbg1.valueChanged.disconnect()
-                self.dbg2.valueChanged.disconnect()
-            except TypeError:
-                pass
-
-        if tab == 1:
-            self.dnav.setMode(self.dnav.M_ZOOM)
-        elif tab == 2:
-            pass
-        elif tab == 3:
-            pass
 
     def nextTab(self):
         self.tabs.setCurrentIndex(self.tabs.currentIndex() + 1)

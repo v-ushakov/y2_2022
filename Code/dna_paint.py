@@ -67,7 +67,11 @@ Nucleotide('C', 200,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
                               (95.5, 47), (97.5, 47), (92, 48), (85, 52),
                               (80, 60)])
 
-OUT = 70
+def interpolate(value, target, source = (0, 1000)):
+    tmin, tmax = target
+    smin, smax = source
+    value = min(max(smax, smin), max(min(smax, smin), value))
+    return int(tmin + (value-smin)*(tmax-tmin)/(smax-smin))
 
 
 class DNAView(QWidget):
@@ -105,7 +109,7 @@ class DNAView(QWidget):
         self.repaint()
 
     def selectGene(self, index):
-        self.gene = self.genes[index]
+        self.gene = self.genes[index] if index >= 0 else None
         self.fitGenome()
         self.repaint()
 
@@ -145,16 +149,14 @@ class DNAView(QWidget):
             width = 36*len(self.dna)
         elif self.mode == self.M_ZOOM:
             _, start, end, *_ = self.gene
-            inlen = end - start
-            outlen = len(self.dna) - inlen
-            width = 36*inlen + round(36*outlen*(100 - self.zoom)/100.0)
+            width = interpolate(self.zoom, (36*len(self.dna), 36*(end - start)))
         elif self.mode == self.M_INTRONS:
             _, start, end, *_ = self.gene
             width = 36*(end - start)
         elif self.mode == self.M_SPLICE:
             _, start, end, introns, *_ = self.gene
             inlen = introns[-1][2] if introns else 0
-            width = 36*(end - start) - round(36*inlen*self.zoom/100.0)
+            width = interpolate(self.zoom, (36*(end-start), 36*(end-start-inlen)))
         elif self.mode == self.M_PROTEIN:
             _, _, _, _, genome = self.gene
             width = 36*len(genome)
@@ -165,6 +167,7 @@ class DNAView(QWidget):
                                                     if self.parent() else 0, 0)
 
     def setMode(self, mode):
+        print('setMode', mode)
         self.mode = mode
         self.fitGenome()
         self.repaint()
@@ -194,9 +197,29 @@ class DNAView(QWidget):
     # M_PROTEIN translate protein   ???
     # --------------------------------------------------------------------------
 
+    def underlineGene(self, painter, gene, shift, opaq = 255):
+
+        tata, tac, stop, *_ = gene
+
+        painter.save()
+        painter.translate(0, 10 + shift)
+
+        painter.setPen(QPen(QColor(140, 0, 0, opaq), 5, Qt.SolidLine))
+        painter.drawLine(36*tata, 170, 36*(tata + 4), 170)
+
+        painter.setPen(QPen(QColor(140, 0, 0, opaq), 5, Qt.DotLine))
+        painter.drawLine(36*(tata + 4), 170, 36*tac, 170)
+
+        painter.setPen(QPen(QColor(0, 140, 0, opaq), 5, Qt.SolidLine))
+        painter.drawLine(36*tac,  170, 36*stop, 170)
+        painter.drawLine(36*tac,  160, 36*tac,  170)
+        painter.drawLine(36*stop, 160, 36*stop, 170)
+        painter.restore()
+
+
     def paintWholeGenome(self, ev, painter):
 
-        leftmost = (ev.rect().x())//36
+        leftmost  = (ev.rect().x())//36
         rightmost = (ev.rect().x() + ev.rect().width()+35)//36
 
         # paint nucleotides
@@ -210,42 +233,38 @@ class DNAView(QWidget):
         painter.restore()
 
         # underline genes
-        for tata, tac, stop, *_ in self.genes:
-            painter.save()
-            painter.translate(0, 10 + self.shift_bottom)
-
-            painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.SolidLine))
-            painter.drawLine(36*tata, 170, 36*(tata + 4), 170)
-
-            painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.DotLine))
-            painter.drawLine(36*(tata + 4), 170, 36*tac, 170)
-
-            painter.setPen(QPen(QColor(0, 140, 0), 5, Qt.SolidLine))
-            painter.drawLine(36*tac,  170, 36*stop, 170)
-            painter.drawLine(36*tac,  160, 36*tac,  170)
-            painter.drawLine(36*stop, 160, 36*stop, 170)
-            painter.restore()
+        for gene in self.genes:
+            self.underlineGene(painter, gene, self.shift_bottom, 255)
 
 
     def paintZoom(self, ev, painter):
 
         _, start, end, *_ = self.gene
-        hidden = round(36*start*self.zoom/100.0)
+        hidden = interpolate(self.zoom, (0, 36*start))
+        fly_up = interpolate(self.zoom, (0, 140), (  0,  300))
+        fly_dn = interpolate(self.zoom, (140, 0), (400,  700))
+        fade__ = interpolate(self.zoom, (255, 0), (  0,  400))
+        gray   = interpolate(self.zoom, (0, 100), (  0,  500))
+        drop   = interpolate(self.zoom, (0, 200), (700, 1000))
 
         leftmost  = (hidden + ev.rect().x())//36
         rightmost = (hidden + ev.rect().x() + ev.rect().width() + 35)//36
 
+        painter.save()
         painter.translate(36*leftmost - hidden, 10)
         for pos in range(leftmost, rightmost):
-            grayness = 0
-            if pos < start or pos >= end:
-                grayness = min(self.zoom * 2, 100)
+            grayness = gray if pos < start or pos >= end else 0
 
             x = nucleotides[self.dna[pos]]
-            x.pair().draw(painter, grayness, False, 2*self.shift_bottom)
-            x       .draw(painter, grayness, True,  2*self.shift_top)
+            x       .draw(painter,      100, True,  fly_up, False)
+            x       .draw(painter, grayness, True,  fly_dn, True)
+            x.pair().draw(painter, grayness, False, drop)
             painter.translate(36, 0)
+        painter.restore()
 
+        # underline genes
+        for gene in self.genes:
+            self.underlineGene(painter, gene, drop, fade__)
 
     def paintIntrons(self, ev, painter):
 
@@ -264,12 +283,12 @@ class DNAView(QWidget):
             if i < len(introns):
                 s, e, _ = introns[i]
                 if pos >= s and pos < e:
-                    grayness = min(2*self.zoom, 100)
-                    shift = max(0, 2*self.zoom - 100)
+                    grayness = interpolate(self.zoom, (0,  100), (  0,  300))
+                    shift    = interpolate(self.zoom, (0, -250), (700, 1000))
                 elif pos >= e:
                     i += 1
 
-            nucleotides[self.dna[pos]].draw(painter, grayness, True, 2*shift)
+            nucleotides[self.dna[pos]].draw(painter, grayness, True, shift)
             painter.translate(36, 0)
 
 
@@ -280,9 +299,10 @@ class DNAView(QWidget):
         pos = start
         delta = 0
         i = 0
-        while i < len(introns):                         # TODO: binary search?
+        while i < len(introns):                                                 # TODO: binary search?
             _, e, total = introns[i]
-            lastx = 36*(e - start) - round(36*total*(100 - self.zoom)/100.0)
+            lastx = interpolate(self.zoom, (36*(e-start-total), 36*(e-start)))
+            # 36*(e - start) - round(36*total*(100 - self.zoom)/100.0)
             if lastx > ev.rect().x():
                 break
             pos = e
@@ -304,7 +324,8 @@ class DNAView(QWidget):
                 pos += 1
                 rect_r -= 36
             pos = e
-            delta = round(36*(e - s)*(100 - self.zoom)/100.0)
+            delta = interpolate(self.zoom, (36*(e - s), 0))
+            # round(36*(e - s)*(100 - self.zoom)/100.0)
             painter.translate(delta, 0)
             rect_r -= delta
             i += 1
@@ -337,12 +358,11 @@ class DNAView(QWidget):
         painter.save()
 
         triplets = proteins(genome)
-        print(triplets)
 
         for pos in range(leftmost, rightmost, 3):
             x = nucleotides[genome[pos]]
             am = triplets[int(pos/3)]
-            if self.prot_counter > pos/3:
+            if interpolate(self.zoom, (0, self.numAmins())) > pos/3:
                 painter.setPen(QPen(Qt.black, 3, Qt.SolidLine))
                 if aminos[am] in Yellow:
                     col = Qt.yellow
@@ -386,7 +406,8 @@ if __name__ == "__main__":
     app = QApplication(argv)
     dna = DNAView()
     dna.setDNA('TATAATG'+'CTAGTCCCCAG'*7+'TAA')
-    dna.setMode(dna.M_WHOLE)
+    dna.selectGene(0)
+    dna.setMode(dna.M_PROTEIN)
 
     win = QScrollArea()
     win.setWidget(dna)
@@ -402,9 +423,11 @@ if __name__ == "__main__":
     slider3 = QSlider(Qt.Horizontal)
     slider3.setRange(0, 100)
     slider3.valueChanged.connect(dna.setShiftTop)
+
     slider4 = QSlider(Qt.Horizontal)
-    slider4.setRange(0, 100)
+    slider4.setRange(0, 1000)
     slider4.valueChanged.connect(dna.setZoom)
+
     slider5 = QSlider(Qt.Horizontal)
     slider5.setRange(0, dna.numAmins())
     slider5.valueChanged.connect(dna.setProt)

@@ -51,6 +51,7 @@ def find_genes(dna):
         pos = c+3
         e = 0
         slices = []
+        total = 0
         while e == 0:
             new = ''
             gu = dna.find("GT", pos)
@@ -58,7 +59,8 @@ def find_genes(dna):
             if gu < ag and gu != -1 and ag != -1 :
                 stop = find_gene(dna[pos:gu])
                 if stop == -1:
-                    slices.append([gu, ag + 2])
+                    total += ag + 2 - gu
+                    slices.append((gu, ag + 2, total))
                     rem = (gu-pos)%3
                     if dna[gu-rem:gu] + dna[ag + 2:ag + 5 - rem]  in stops:
                         e = ag+5-rem
@@ -72,7 +74,7 @@ def find_genes(dna):
                     return []
 
         pos = c
-        for (s, f) in slices:
+        for s, f, _ in slices:
             new += dna[pos:s]
             pos = f
         new += dna[pos:e]
