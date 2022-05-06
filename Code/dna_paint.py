@@ -28,23 +28,28 @@ class Nucleotide:
         self.shape.translate(0, 110)
         self.rshape.translate(35, 110)
 
-    def draw(self, painter, gr, upper):
-        color = QColor(((100-gr)*self.r + gr*self.gray)//100,
-                       ((100-gr)*self.g + gr*self.gray)//100,
-                       ((100-gr)*self.b + gr*self.gray)//100, 100)
+    def draw(self, painter, gray, upper, shift = 0, rna = None):
 
+        if rna is None: rna = upper
+        key = 'U' if rna and self.key == 'T' else self.key
+
+        color = QColor(((100-gray)*self.r + gray*self.gray)//100,
+                       ((100-gray)*self.g + gray*self.gray)//100,
+                       ((100-gray)*self.b + gray*self.gray)//100, 100)
+        if upper: shift = -shift
+        painter.save()
+        painter.translate(0, shift)
         painter.setPen(QPen(Qt.black, 4, Qt.SolidLine))
         painter.setBrush(QBrush(color, Qt.SolidPattern))
-
         if upper:
             painter.drawPolygon(self.rshape)
-            key = 'U' if self.key == 'T' else self.key
             painter.drawText(self.rshape.boundingRect().center() + QPoint(-3, -2), key)
         else:
             painter.drawPolygon(self.shape)
-            painter.drawText(self.shape.boundingRect().center() + QPoint(-3, 10), self.key)
+            painter.drawText(self.shape.boundingRect().center() + QPoint(-3, 10), key)
+        painter.restore()
 
-    def complement(self):
+    def pair(self):
         dn = {'T': 'A', 'C': 'G', 'G': 'C', 'A': 'T'}
         return nucleotides[dn[self.key]]
 
@@ -74,42 +79,60 @@ class DNAView(QWidget):
     M_SPLICE    = 4 # squashing introns
     M_PROTEIN   = 5 # translation and protein synthesis
 
-    def numAmins(self):
-        return len(self.gene[4])//3 if self.gene else 0
-
     def __init__(self):
         super().__init__()
         self.mode = self.M_SPLASH
         self.setDNA('')
+
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
+
+        self.shift_bottom = 0
+        self.shift_top = 0
+        self.gray = 0
         #-----------------------------------------------------------------------
-        self.color_count = 0
-        self.counter = 0
-        self.counterDNA = 0
         self.stage = 1
         self.prot_counter = 0
 
     def DNA(self):
         return self.dna
 
+
     def setDNA(self, dna):
         self.dna = dna
         self.genes = find_genes(dna)
-        self.gene = self.genes[0] if 0 in self.genes else None
+        self.gene = None
         self.fitGenome()
         self.repaint()
 
-    def setCounter(self, val):
-        self.counter = val
+    def selectGene(self, index):
+        self.gene = self.genes[index]
+        self.fitGenome()
         self.repaint()
 
-    def setCounterDNA(self, val):
-        self.counterDNA = val
+    #---------------------------------------------------------------------------
+    def numAmins(self):
+        return len(self.gene[4])//3 if self.gene else 0
+
+    def geneStartX(self):
+        if self.mode != self.M_WHOLE or not self.gene:
+            return None
+        return 36*self.gene[1]
+
+    #---------------------------------------------------------------------------
+    def setShiftTop(self, val):
+        self.shift_top = val
+        self.repaint()
+
+    def setShiftBottom(self, val):
+        self.shift_bottom = val
         self.repaint()
 
     def setGray(self, val):
-        self.color_count = val
+        self.gray = val
         self.repaint()
+
+
+
 
     #---------------------------------------------------------------------------
     def onViewResize(self, ev):
@@ -181,29 +204,27 @@ class DNAView(QWidget):
         painter.translate(36*leftmost, 10)
         for pos in range(leftmost, rightmost):
             x = nucleotides[self.dna[pos]]
-            painter.save()
-            painter.translate(0, (self.counterDNA) * 2)
-            x.complement().draw(painter, self.color_count, False)
-            painter.restore()
-            painter.save()
-            painter.translate(0, (self.counter - OUT)*2)
-            x.draw(painter, 0, True)
-            painter.restore()
+            x       .draw(painter, 100, True,  self.shift_top, False)
+            x.pair().draw(painter,   0, False, self.shift_bottom)
             painter.translate(36, 0)
         painter.restore()
 
         # underline genes
         for tata, tac, stop, *_ in self.genes:
+            painter.save()
+            painter.translate(0, 10 + self.shift_bottom)
+
             painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.SolidLine))
-            painter.drawLine(tata*36,170, (tata+4)*36, 170)
+            painter.drawLine(36*tata, 170, 36*(tata + 4), 170)
 
             painter.setPen(QPen(QColor(140, 0, 0), 5, Qt.DotLine))
-            painter.drawLine((tata+4)*36, 170, (tac)*36, 170)
+            painter.drawLine(36*(tata + 4), 170, 36*tac, 170)
 
             painter.setPen(QPen(QColor(0, 140, 0), 5, Qt.SolidLine))
-            painter.drawLine((tac)*36, 170, stop*36, 170)
-            painter.drawLine((tac)*36, 160, tac *36, 170)
-            painter.drawLine(stop *36, 160, stop*36, 170)
+            painter.drawLine(36*tac,  170, 36*stop, 170)
+            painter.drawLine(36*tac,  160, 36*tac,  170)
+            painter.drawLine(36*stop, 160, 36*stop, 170)
+            painter.restore()
 
 
     def paintZoom(self, ev, painter):
@@ -221,14 +242,8 @@ class DNAView(QWidget):
                 grayness = min(self.zoom * 2, 100)
 
             x = nucleotides[self.dna[pos]]
-            painter.save()
-            painter.translate(0, (self.counterDNA) * 2)
-            x.complement().draw(painter, grayness, False)
-            painter.restore()
-            painter.save()
-            painter.translate(0, (self.counter - OUT)*2)
-            x.draw(painter, grayness, True)
-            painter.restore()
+            x.pair().draw(painter, grayness, False, 2*self.shift_bottom)
+            x       .draw(painter, grayness, True,  2*self.shift_top)
             painter.translate(36, 0)
 
 
@@ -254,10 +269,7 @@ class DNAView(QWidget):
                 elif pos >= e:
                     i += 1
 
-            painter.save()
-            painter.translate(0, 2*shift)
-            nucleotides[self.dna[pos]].draw(painter, grayness, True)
-            painter.restore()
+            nucleotides[self.dna[pos]].draw(painter, grayness, True, 2*shift)
             painter.translate(36, 0)
 
 
@@ -374,6 +386,7 @@ if __name__ == "__main__":
     app = QApplication(argv)
     dna = DNAView()
     dna.setDNA('TATAATG'+'CTAGTCCCCAG'*7+'TAA')
+    dna.setMode(dna.M_WHOLE)
 
     win = QScrollArea()
     win.setWidget(dna)
@@ -381,14 +394,14 @@ if __name__ == "__main__":
 
 
     slider1 = QSlider(Qt.Horizontal)
-    slider1.valueChanged.connect(dna.setCounter)
-    slider1.setRange(0, 70)
+    slider1.valueChanged.connect(dna.setShiftBottom)
+    slider1.setRange(0, 100)
     slider2 = QSlider(Qt.Horizontal)
     slider2.setRange(0, 100)
     slider2.valueChanged.connect(dna.setGray)
     slider3 = QSlider(Qt.Horizontal)
     slider3.setRange(0, 100)
-    slider3.valueChanged.connect(dna.setCounterDNA)
+    slider3.valueChanged.connect(dna.setShiftTop)
     slider4 = QSlider(Qt.Horizontal)
     slider4.setRange(0, 100)
     slider4.valueChanged.connect(dna.setZoom)
