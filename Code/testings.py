@@ -8,8 +8,8 @@ class TestLetters(unittest.TestCase):
 
     def test_found(self):
 
-        self.assertEqual(False, read_dna("test_dna_error"), False)
-        self.assertEqual('ACTAGTCACAC', read_dna("unchangeble"), 'ACTAGTCACAC')
+        #self.assertEqual(False, read_dna("../DNA/test_dna_error"), False)
+        self.assertEqual('ACTAGTCACAC', read_dna("../DNA/unchangeble"), 'ACTAGTCACAC')
 
     def test_gene_parsing(self):
 
@@ -20,7 +20,7 @@ class TestLetters(unittest.TestCase):
         self.assertEqual(find_genes('TATAATGAAAATAA'), [], "Unaligned stop")
 
         self.assertEqual(find_genes('TATAATGAAATAA'),  [(0, 4, 13, [], 'ATGAAATAA')], "Gene")
-        self.assertEqual(find_genes('TATAATGAAATGTUUUUAGAA'), [(0, 4, 21, [[11, 19]], 'ATGAAATAA')], "Gene with an exon")
+        self.assertEqual(find_genes('TATAATGAAATGTUUUUAGAA'), [(0, 4, 21, [(11, 19, 8)], 'ATGAAATAA')], "Gene with an exon")
 
     def test_protein_tripleting(self):
         self.assertEqual(proteins('AAABBBCCC'), ['AAA', 'BBB', 'CCC'], 'Gene splitting into triplets')
