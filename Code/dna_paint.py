@@ -167,7 +167,6 @@ class DNAView(QWidget):
                                                     if self.parent() else 0, 0)
 
     def setMode(self, mode):
-        print('setMode', mode)
         self.mode = mode
         self.fitGenome()
         self.repaint()
