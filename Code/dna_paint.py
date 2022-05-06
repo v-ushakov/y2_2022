@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QScrollArea, QMainWindow, QScrollArea, QSlider, QSplitter, \
                             QVBoxLayout, QPushButton
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygon, QColor, QTransform, qGray, QCursor
-from PyQt5.QtCore import Qt, QPoint, QTimer
+from PyQt5.QtCore import Qt, QPoint
 from statistics import mean
 from biosynth import read_dna as rl
 from biosynth import find_genes, proteins
@@ -65,8 +65,9 @@ Nucleotide('C', 200,   0, 0, [(80, 60), (80, 100), (115, 100), (115, 60),
 OUT = 70
 
 
-class DNA_view(QWidget):
+class DNAView(QWidget):
 
+    M_SPLASH    = 0
     M_WHOLE     = 1 # the whole genome is shown
     M_ZOOM      = 2 # zooming to a particular gene
     M_INTRONS   = 3 # highlighting introns
@@ -74,40 +75,26 @@ class DNA_view(QWidget):
     M_PROTEIN   = 5 # translation and protein synthesis
 
     def numAmins(self):
-        return len(self.gene[4])//3
+        return len(self.gene[4])//3 if self.gene else 0
 
-    def __init__(self, dna):
+    def __init__(self):
         super().__init__()
-        #self.setStyleSheet("background : #cbd4fb;")
-        self.dna = dna
-        self.genes = find_genes(dna)
-        #-----------------------------------------------------------------------
-        self.mode = self.M_PROTEIN
-        self.gene = self.genes[0]           # an item from self.genes       TODO
-        #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        self.mode = self.M_SPLASH
+        self.setDNA('')
         self.zoom = 0                       # M_ZOOM: zooming to self.gene
         #-----------------------------------------------------------------------
-        self.fitGenome()
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.timerShot)
-
-        self.timer2 = QTimer()
-        self.timer2.timeout.connect(self.timerShot2)
-
-        self.color_timer = QTimer()
-        self.color_timer.timeout.connect(self.timerColor)
-
-        self.prot_timer = QTimer()
-        self.prot_timer.timeout.connect(self.setProt)
-
         self.color_count = 0
         self.counter = 0
         self.counterDNA = 0
         self.stage = 1
         self.prot_counter = 0
 
-
+    def setDNA(self, dna):
+        self.dna = dna
+        self.genes = find_genes(dna)
+        self.gene = self.genes[0] if 0 in self.genes else None
+        self.fitGenome()
+        self.repaint()
 
     def setCounter(self, val):
         self.counter = val
@@ -121,31 +108,14 @@ class DNA_view(QWidget):
         self.color_count = val
         self.repaint()
 
-    def timerShot(self):
-        self.setCounter(self.counter + 1)
-        if self.counter >= OUT:
-            self.timer.stop()
-            print("timer has been stopped")
-            self.color_timer.start(5)
-
-    def timerShot2(self):
-        self.setCounterDNA(self.counterDNA + 1)
-        if self.counterDNA >= OUT+50:
-            self.timer2.stop()
-            print("timer has been stopped")
-            self.counterDNA = 0
-
-    def timerColor(self):
-        self.setGray(self.color_count + 1)
-        self.repaint()
-        if self.color_count >= 100:
-            self.color_timer.stop()
-            print("color timer has been stopped")
-            self.timer2.start(50)
-
     #---------------------------------------------------------------------------
+    def onViewResize(self, ev):
+        self.fitGenome()
+
     def fitGenome(self):
-        if self.mode == self.M_WHOLE:
+        if self.mode == self.M_SPLASH:
+            width = self.parent().contentsRect().width() if self.parent() else 0
+        elif self.mode == self.M_WHOLE:
             width = 36*len(self.dna)
         elif self.mode == self.M_ZOOM:
             _, start, end, *_ = self.gene
@@ -165,6 +135,8 @@ class DNA_view(QWidget):
         else:
             width = 0
         self.resize(width, 300)
+        self.move(max(0, (self.parent().contentsRect().width() - width)/2)
+                                                    if self.parent() else 0, 0)
 
     def setMode(self, mode):
         self.mode = mode
@@ -375,7 +347,9 @@ class DNA_view(QWidget):
     def paintEvent(self, ev):
         try:
             painter = QPainter(self)
-            if self.mode == self.M_WHOLE:
+            if self.mode == self.M_SPLASH:
+                painter.drawText(self.rect(), Qt.AlignCenter, 'BioSynth')
+            elif self.mode == self.M_WHOLE:
                 self.paintWholeGenome(ev, painter)
             elif self.mode == self.M_ZOOM:
                 self.paintZoom(ev, painter)
@@ -388,19 +362,6 @@ class DNA_view(QWidget):
         except Exception as e:
             print('in paintEvent()', e)
 
-    def start_trans(self):
-        self.counter = 0
-        self.color_count = 0
-        self.prot_timer.start(50)
-
-    def keyReleaseEvent(self, ev):
-        print(ev.key())
-        if ev.key() == 32:
-            #self.start_trans()
-            self.start_trans()
-        elif ev.key() == 67:
-            self.color_count = 0
-            self.color_timer.start(50)
 
 if __name__ == "__main__":
     from sys import argv
@@ -408,7 +369,8 @@ if __name__ == "__main__":
 
 
     app = QApplication(argv)
-    dna = DNA_view('TATAATG'+'CTAGTCCCCAG'*7+'TAA')
+    dna = DNAView()
+    dna.setDNA('TATAATG'+'CTAGTCCCCAG'*7+'TAA')
 
     win = QScrollArea()
     win.setWidget(dna)
@@ -431,26 +393,12 @@ if __name__ == "__main__":
     slider5.setRange(0, dna.numAmins())
     slider5.valueChanged.connect(dna.setProt)
 
-
-
-    button1 = QPushButton("Start transcription")
-    button1.setCursor(QCursor(Qt.PointingHandCursor))
-    button1.setStyleSheet("*{border: 2px solid '#c9bd6b';" +
-                         "border-radius : 25px;" +
-                         "font-size : 25px;" +
-                         "color : 'black';" +
-                         "padding: 25px 0;" +
-                         "margin: 5px 10px;}" +
-                         "*:hover{background: '#c9bd6b';}")
-    button1.clicked.connect(dna.start_trans)
-
     layout = QVBoxLayout()
     layout.addWidget(slider1)
     layout.addWidget(slider2)
     layout.addWidget(slider3)
     layout.addWidget(slider4)
     layout.addWidget(slider5)
-    layout.addWidget(button1)
 
     panel = QWidget()
     panel.setLayout(layout)

@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout,
 from PyQt5.QtCore    import Qt
 
 import biosynth
+from dna_paint       import DNAView
 
 
 def stdIcon(id):
@@ -32,9 +33,13 @@ class BioWindow(QMainWindow):
         pick = QListView()
         rght.layout().addWidget(pick)
 
+        dnav = self.dnav = DNAView()
         view = QScrollArea()
+        view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        view.setWidget(dnav)
         view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)    # height
-        view.setMinimumSize(0, 200)
+        view.setMinimumSize(0, 300)
+        view.resizeEvent = dnav.onViewResize
         left.layout().addWidget(view)
         left.layout().addWidget(QSlider(Qt.Horizontal))
         left.layout().addWidget(QSlider(Qt.Horizontal))
@@ -95,19 +100,18 @@ class BioWindow(QMainWindow):
         self.tabChanged(0)
 
     def openFile(self):
-        ok = self.odlg.exec()
-        if ok:
+        if self.odlg.exec():
             try:
                 filename = self.odlg.selectedFiles()[0]
-                dna = biosynth.read_dna(filename)
-                # TODO: insert the data
+                self.dnav.setDNA(biosynth.read_dna(filename))
                 self.file.setText('File: ' + os.path.relpath(filename))
+                self.fileLoaded(True)
             except Exception as e:
                 QMessageBox(QMessageBox.Warning,
                                             'Cannot read DNA', str(e)).exec()
-                ok = False
+                self.fileLoaded(False)
+                self.dnav.setDNA('')
                 self.file.setText(self.NO_FILE)
-            self.fileLoaded(ok)
 
     def fileLoaded(self, ok):
         self.file_loaded = ok
