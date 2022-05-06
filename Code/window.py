@@ -1,7 +1,7 @@
 import os.path, sys
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QListWidget, QMainWindow, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QSlider, QSplitter, QStyle, QTabWidget, QVBoxLayout, QWidget
-from PyQt5.QtCore    import Qt
+from PyQt5.QtCore    import Qt, QTimer
 
 import biosynth
 from dna_paint       import DNAView
@@ -98,11 +98,20 @@ class BioWindow(QMainWindow):
         self.odlg.setFileMode(QFileDialog.ExistingFile)
 
         #-----------------------------------------------------------------------
+        self.time = QTimer()
+        self.time.timeout.connect(self.tick)
+
         self.resize(1000, 500)
         hspl.setSizes([700, 300])
 
         self.fileLoaded(False)
         self.tabChanged(0)
+
+    def tick(self):
+        nv = self.play.value() + 3
+        self.play.setValue(nv)
+        if nv >= self.play.maximum():
+            self.time.stop()
 
     def playStep(self, value):
         tab = self.tabs.currentIndex()
@@ -153,28 +162,33 @@ class BioWindow(QMainWindow):
             self.dnav.setMode(self.dnav.M_WHOLE if self.file_loaded else self.dnav.M_SPLASH)
             self.play.setRange(0, 0)
             self.play.setEnabled(False)
+            self.time.stop()
 
         elif tab == 1:
             self.dnav.setMode(self.dnav.M_ZOOM)
             self.play.setRange(0, 1000)
             self.play.setValue(0)
             self.play.setEnabled(True)
+            self.time.start(10)
 
         elif tab == 2:
             self.dnav.setMode(self.dnav.M_INTRONS)
             self.play.setRange(0, 1999)
             self.play.setValue(0)
             self.play.setEnabled(True)
+            self.time.start(10)
 
         elif tab == 3:
             self.dnav.setMode(self.dnav.M_PROTEIN)
             self.play.setRange(0, 1000)
             self.play.setValue(0)
             self.play.setEnabled(True)
+            self.time.start(10)
 
         else:
             self.play.setRange(0, 0)
             self.play.setEnabled(False)
+            self.time.stop()
 
     def nextTab(self):
         self.tabs.setCurrentIndex(self.tabs.currentIndex() + 1)
