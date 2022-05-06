@@ -72,7 +72,7 @@ class BioWindow(QMainWindow):
         file.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         pane.layout().addWidget(file, 0, 0)
         open = QPushButton(stdIcon(QStyle.SP_DialogOpenButton), 'Open File')
-        open.clicked.connect(self.openFile)
+        open.clicked.connect(self.openFileDialog)
         pane.layout().addWidget(open, 0, 1)
         pane.layout().addWidget(QWidget(), 1, 0, 1, 2)                  # filler
         pane.layout().setColumnStretch(0, 1)
@@ -99,19 +99,23 @@ class BioWindow(QMainWindow):
         self.fileLoaded(False)
         self.tabChanged(0)
 
-    def openFile(self):
+    def openFileDialog(self):
         if self.odlg.exec():
-            try:
-                filename = self.odlg.selectedFiles()[0]
-                self.dnav.setDNA(biosynth.read_dna(filename))
-                self.file.setText('File: ' + os.path.relpath(filename))
-                self.fileLoaded(True)
-            except Exception as e:
-                QMessageBox(QMessageBox.Warning,
-                                            'Cannot read DNA', str(e)).exec()
-                self.fileLoaded(False)
-                self.dnav.setDNA('')
-                self.file.setText(self.NO_FILE)
+            self.openFile(self.odlg.selectedFiles()[0])
+
+    def openFile(self, filename):
+        try:
+            self.dnav.setDNA(biosynth.read_dna(filename))
+            self.file.setText('File: ' + os.path.relpath(filename))
+            self.fileLoaded(True)
+            return True
+        except Exception as e:
+            QMessageBox(QMessageBox.Warning,
+                                        'Cannot read DNA', str(e)).exec()
+            self.fileLoaded(False)
+            self.dnav.setDNA('')
+            self.file.setText(self.NO_FILE)
+            return False
 
     def fileLoaded(self, ok):
         self.file_loaded = ok

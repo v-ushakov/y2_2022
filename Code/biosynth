@@ -8,5 +8,9 @@ import window
 
 app = QApplication(sys.argv)
 win = window.BioWindow()
+if len(sys.argv) == 2:
+    if not win.openFile(sys.argv[1]):
+        print('Unable to open', sys.argv[1])
+        sys.exit(1)
 win.show()
 sys.exit(app.exec())
